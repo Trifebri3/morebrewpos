@@ -45,7 +45,6 @@ class ProdukController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
             'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|max:2048',
             'is_active' => 'boolean'
         ]);
@@ -53,9 +52,16 @@ class ProdukController extends Controller
         $validated['kedai_id'] = auth()->user()->kedai_id;
         $validated['is_active'] = $request->has('is_active');
 
+        // Auto generate SKU
+        $categoryPrefix = $validated['category'] ? strtoupper(substr($validated['category'], 0, 3)) : 'PRD';
+        $uniqueId = rand(1000, 9999);
+        $validated['sku'] = $categoryPrefix . '-' . $uniqueId;
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
+
+        $validated['stock'] = 100; // Set default stok 100
 
         Produk::create($validated);
         return redirect()->route('admin.operasional.produk.index')->with('success', 'Produk berhasil ditambahkan.');
@@ -78,7 +84,6 @@ class ProdukController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:100',
             'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
             'image' => 'nullable|image|max:2048',
         ]);
 

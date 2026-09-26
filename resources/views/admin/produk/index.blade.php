@@ -54,7 +54,6 @@
                 <th>Nama Produk</th>
                 <th>Kategori</th>
                 <th>Harga</th>
-                <th>Stok</th>
                 <th>Status</th>
                 <th width="150">Aksi</th>
             </tr>
@@ -66,7 +65,6 @@
                     <td style="font-weight: 500;">{{ $item->name }}</td>
                     <td>{{ $item->category ?: '-' }}</td>
                     <td>Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                    <td>{{ $item->stock }}</td>
                     <td>
                         <span class="status-badge {{ $item->is_active ? 'status-active' : 'status-inactive' }}">
                             {{ $item->is_active ? 'Aktif' : 'Nonaktif' }}

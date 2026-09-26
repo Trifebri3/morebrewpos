@@ -7,16 +7,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/order', function (\Illuminate\Http\Request $request) {
-    $hash = $request->query('meja');
-    $meja = \App\Models\Meja::where('qr_hash', $hash)->first();
-    
-    if (!$meja) {
-        return "Meja tidak ditemukan atau QR tidak valid.";
-    }
-
-    return "<h1>Selamat Datang!</h1><p>Anda berada di <b>{$meja->name}</b>.</p><p>Halaman Menu Digital / Self-Ordering akan segera hadir di sini.</p>";
-});
+Route::get('/order', [\App\Http\Controllers\OrderController::class, 'index'])->name('order.index');
+Route::post('/order/submit', [\App\Http\Controllers\OrderController::class, 'submit'])->name('order.submit');
+Route::get('/order/track/{invoice}', [\App\Http\Controllers\OrderController::class, 'track'])->name('order.track');
 
 Route::get('/absen', [\App\Http\Controllers\AbsensiController::class, 'showPublicForm'])->name('absen');
 Route::post('/absen', [\App\Http\Controllers\AbsensiController::class, 'submitPublicAbsen']);

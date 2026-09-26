@@ -23,11 +23,12 @@ Route::prefix('operasional')->name('admin.operasional.')->group(function () {
 });
 
 Route::prefix('penjualan')->name('admin.penjualan.')->group(function () {
-    Route::get('/transaksi', [PlaceholderController::class, 'show'])->name('transaksi');
-    Route::get('/invoice', [PlaceholderController::class, 'show'])->name('invoice');
-    Route::get('/voucher', [PlaceholderController::class, 'show'])->name('voucher');
-    Route::get('/refund', [PlaceholderController::class, 'show'])->name('refund');
-    Route::get('/riwayat', [PlaceholderController::class, 'show'])->name('riwayat');
+    Route::get('/transaksi', [\App\Http\Controllers\Admin\PenjualanController::class, 'transaksi'])->name('transaksi');
+    Route::get('/invoice', [\App\Http\Controllers\Admin\PenjualanController::class, 'invoice'])->name('invoice');
+    Route::resource('/voucher', \App\Http\Controllers\Admin\VoucherController::class);
+    Route::get('/refund', [\App\Http\Controllers\Admin\PenjualanController::class, 'refund'])->name('refund');
+    Route::post('/refund/{transaksi}', [\App\Http\Controllers\Admin\PenjualanController::class, 'processRefund'])->name('refund.process');
+    Route::get('/riwayat', [\App\Http\Controllers\Admin\PenjualanController::class, 'riwayat'])->name('riwayat');
 });
 
 Route::prefix('kedai')->name('admin.kedai.')->group(function () {
@@ -41,13 +42,19 @@ Route::prefix('kedai')->name('admin.kedai.')->group(function () {
 Route::prefix('staff')->name('admin.staff.')->group(function () {
     Route::resource('/karyawan', \App\Http\Controllers\Admin\KaryawanController::class);
     Route::get('/karyawan/{karyawan}/qr', [\App\Http\Controllers\Admin\KaryawanController::class, 'qr'])->name('karyawan.qr');
-    Route::get('/shift', [PlaceholderController::class, 'show'])->name('shift');
-    Route::get('/absensi', [PlaceholderController::class, 'show'])->name('absensi');
+    Route::get('/shift', [\App\Http\Controllers\ShiftController::class, 'index'])->name('shift');
+    Route::post('/shift', [\App\Http\Controllers\ShiftController::class, 'store'])->name('shift.store');
+    Route::delete('/shift/{shift}', [\App\Http\Controllers\ShiftController::class, 'destroy'])->name('shift.destroy');
+    Route::post('/shift/{shift}/assign', [\App\Http\Controllers\ShiftController::class, 'assignUser'])->name('shift.assign');
+    Route::delete('/shift/{shift}/remove/{user}', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shift.remove');
+    Route::get('/absensi', [\App\Http\Controllers\Admin\AbsensiController::class, 'index'])->name('absensi');
+    Route::post('/absensi/settings', [\App\Http\Controllers\Admin\AbsensiController::class, 'updateSettings'])->name('absensi.settings.update');
+    Route::post('/absensi/scan', [\App\Http\Controllers\Admin\AbsensiController::class, 'scan'])->name('absensi.scan');
     Route::get('/aktivitas', [PlaceholderController::class, 'show'])->name('aktivitas');
 });
 
 Route::prefix('laporan')->name('admin.laporan.')->group(function () {
-    Route::get('/penjualan', [PlaceholderController::class, 'show'])->name('penjualan');
+    Route::get('/penjualan', [\App\Http\Controllers\Admin\LaporanController::class, 'penjualan'])->name('penjualan');
     Route::get('/produk', [PlaceholderController::class, 'show'])->name('produk');
     Route::get('/kas', [PlaceholderController::class, 'show'])->name('kas');
     Route::get('/pengeluaran', [\App\Http\Controllers\Admin\LaporanController::class, 'pengeluaran'])->name('pengeluaran');

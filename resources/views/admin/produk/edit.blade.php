@@ -67,11 +67,6 @@
                     <input type="number" name="price" class="form-control" value="{{ old('price', (int)$produk->price) }}" required min="0">
                     @error('price') <span class="error-text">{{ $message }}</span> @enderror
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Stok</label>
-                    <input type="number" name="stock" class="form-control" value="{{ old('stock', $produk->stock) }}" required min="0">
-                    @error('stock') <span class="error-text">{{ $message }}</span> @enderror
-                </div>
             </div>
 
             <div class="form-group">

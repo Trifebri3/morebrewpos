@@ -12,10 +12,12 @@ class MejaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(\App\Services\Admin\DashboardService $dashboardService)
     {
+        $data = $dashboardService->getDashboardData();
+        $data['title'] = 'Manajemen Meja';
         $mejas = Meja::all();
-        return view('admin.meja.index', compact('mejas'));
+        return view('admin.meja.index', compact('data', 'mejas'));
     }
 
     /**

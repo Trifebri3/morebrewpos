@@ -20,21 +20,18 @@ class DashboardService
                 'Operasional' => [
                     ['label' => 'Produk', 'url' => route('admin.operasional.produk.index'), 'active' => request()->routeIs('admin.operasional.produk.*')],
                     ['label' => 'Kategori', 'url' => route('admin.operasional.kategori.index'), 'active' => request()->routeIs('admin.operasional.kategori.*')],
-                    ['label' => 'Harga', 'url' => route('admin.operasional.harga'), 'active' => request()->routeIs('admin.operasional.harga')],
-                    ['label' => 'Stok', 'url' => route('admin.operasional.stok'), 'active' => request()->routeIs('admin.operasional.stok')],
-                    ['label' => 'Supplier', 'url' => route('admin.operasional.supplier'), 'active' => request()->routeIs('admin.operasional.supplier')],
+                    ['label' => 'Stok Harian', 'url' => route('admin.operasional.stok'), 'active' => request()->routeIs('admin.operasional.stok')],
                     ['label' => 'Belanja Harian', 'url' => route('admin.operasional.pengeluaran.index'), 'active' => request()->routeIs('admin.operasional.pengeluaran.*')],
                 ],
                 'Penjualan' => [
                     ['label' => 'Transaksi', 'url' => route('admin.penjualan.transaksi'), 'active' => request()->routeIs('admin.penjualan.transaksi')],
                     ['label' => 'Invoice', 'url' => route('admin.penjualan.invoice'), 'active' => request()->routeIs('admin.penjualan.invoice')],
-                    ['label' => 'Voucher Promo', 'url' => route('admin.penjualan.voucher'), 'active' => request()->routeIs('admin.penjualan.voucher')],
+                    ['label' => 'Voucher Promo', 'url' => route('admin.penjualan.voucher.index'), 'active' => request()->routeIs('admin.penjualan.voucher.*')],
                     ['label' => 'Refund', 'url' => route('admin.penjualan.refund'), 'active' => request()->routeIs('admin.penjualan.refund')],
                     ['label' => 'Riwayat', 'url' => route('admin.penjualan.riwayat'), 'active' => request()->routeIs('admin.penjualan.riwayat')],
                 ],
                 'Kedai' => [
                     ['label' => 'Meja', 'url' => route('admin.kedai.meja.index'), 'active' => request()->routeIs('admin.kedai.meja.*')],
-                    ['label' => 'QR Meja', 'url' => route('admin.kedai.meja.index'), 'active' => false],
                     ['label' => 'Printer', 'url' => route('admin.kedai.printer'), 'active' => request()->routeIs('admin.kedai.printer')],
                     ['label' => 'Pengaturan Kedai', 'url' => route('admin.kedai.pengaturan'), 'active' => request()->routeIs('admin.kedai.pengaturan')],
                 ],

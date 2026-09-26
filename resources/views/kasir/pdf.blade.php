@@ -21,8 +21,8 @@
 <body onload="window.print()">
     <div class="receipt">
         <div class="center border-bottom">
-            <h2 style="margin:0 0 5px 0; font-size:18px;">MORE BREW</h2>
-            <div class="text-sm">Kopi & Teman Nongkrong</div>
+            <div style="margin-bottom: 5px;"><img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 40px;"></div>
+            <div class="text-sm">something, between home and everywhare</div>
             <div class="text-sm" style="margin-top: 5px;">
                 Jl. Sasmitatmaja No.6, Paledang<br>
                 Kec. Lengkong, Kota Bandung<br>
@@ -75,8 +75,8 @@
             
             <div style="margin-top: 15px; border-top: 1px solid black; padding-top: 10px;">
                 <div class="bold">Wi-Fi Area</div>
-                <div class="text-sm">SSID: MORE BREW</div>
-                <div class="text-sm">Pass: MORE BREW</div>
+                <div class="text-sm">SSID: Kedai Kopi</div>
+                <div class="text-sm">Pass: Kopi1234</div>
             </div>
         </div>
     </div>

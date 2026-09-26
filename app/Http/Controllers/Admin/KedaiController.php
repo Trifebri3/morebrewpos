@@ -8,10 +8,12 @@ use App\Models\Kedai;
 
 class KedaiController extends Controller
 {
-    public function pengaturan()
+    public function pengaturan(\App\Services\Admin\DashboardService $dashboardService)
     {
+        $data = $dashboardService->getDashboardData();
+        $data['title'] = 'Pengaturan Kedai';
         $kedai = Kedai::first();
-        return view('admin.kedai.pengaturan', compact('kedai'));
+        return view('admin.kedai.pengaturan', compact('data', 'kedai'));
     }
 
     public function updatePengaturan(Request $request)
@@ -25,7 +27,9 @@ class KedaiController extends Controller
 
         $kedai = Kedai::first();
         if ($kedai) {
-            $kedai->update($request->only('name', 'latitude', 'longitude', 'radius_meter'));
+            $dataToUpdate = $request->only('name', 'latitude', 'longitude', 'radius_meter');
+            $dataToUpdate['is_qr_absen_enabled'] = $request->has('is_qr_absen_enabled');
+            $kedai->update($dataToUpdate);
         }
 
         return back()->with('success', 'Pengaturan Kedai berhasil disimpan.');

@@ -17,6 +17,10 @@ class AbsensiController extends Controller
         if (!$kedai) {
             return "Pengaturan Kedai belum dilakukan.";
         }
+        
+        if (!$kedai->is_link_absen_enabled) {
+            return "Fitur Absensi via Tautan saat ini dinonaktifkan oleh Admin.";
+        }
 
         return view('absen', compact('kedai'));
     }
@@ -32,6 +36,9 @@ class AbsensiController extends Controller
         ]);
 
         $kedai = Kedai::first();
+        if (!$kedai || !$kedai->is_link_absen_enabled) {
+            return response()->json(['success' => false, 'message' => 'Fitur absensi via tautan saat ini dinonaktifkan oleh Admin.']);
+        }
         
         // Cari user berdasarkan email atau qr_code (atau ID)
         $user = User::where('email', $request->identifier)
@@ -43,14 +50,40 @@ class AbsensiController extends Controller
             return response()->json(['success' => false, 'message' => 'Identitas Karyawan tidak ditemukan.']);
         }
 
+        // Cek absensi hari ini (Mencegah absen ganda)
+        $absenHariIni = \App\Models\Absensi::where('user_id', $user->id)
+            ->whereDate('created_at', \Carbon\Carbon::today())
+            ->where('type', $request->type)
+            ->exists();
+            
+        if ($absenHariIni) {
+            return response()->json(['success' => false, 'message' => 'Anda sudah melakukan absen ' . $request->type . ' hari ini.']);
+        }
+
         // Cek Jarak (Haversine Formula) - jika latitude/longitude kedai di-set
-        $status = 'valid';
+        $status = 'Tepat Waktu';
         if ($kedai->latitude && $kedai->longitude) {
             $distance = $this->calculateDistance($kedai->latitude, $kedai->longitude, $request->latitude, $request->longitude);
             if ($distance > $kedai->radius_meter) {
-                $status = 'luar_zona';
-                // Jika ingin ketat, tolak:
-                // return response()->json(['success' => false, 'message' => 'Anda berada di luar radius kedai (' . round($distance) . 'm).']);
+                $status = 'Luar Zona Kedai (' . round($distance) . 'm)';
+            }
+        }
+
+        // Hitung Keterlambatan berbasis Shift (jika tipe = Masuk)
+        if ($request->type == 'Masuk' && !str_contains($status, 'Luar Zona')) {
+            $hariIni = \Carbon\Carbon::now()->locale('id')->isoFormat('dddd');
+            $shift = \App\Models\Shift::where('hari', $hariIni)
+                ->whereHas('users', function($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })->first();
+
+            if ($shift && !$shift->is_libur) {
+                $waktuMulai = \Carbon\Carbon::createFromFormat('H:i:s', $shift->jam_mulai);
+                $sekarang = \Carbon\Carbon::now();
+                if ($sekarang->gt($waktuMulai)) {
+                    $terlambatMenit = $sekarang->diffInMinutes($waktuMulai);
+                    $status = 'Terlambat ' . $terlambatMenit . ' Menit';
+                }
             }
         }
 

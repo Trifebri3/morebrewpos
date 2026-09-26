@@ -62,6 +62,9 @@
     
     .payment-option { flex: 1; padding: 16px; border-radius: 8px; border: 2px solid var(--border-color); text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text-muted); }
     .payment-option.active { border-color: var(--text-main); background: #f3f4f6; color: var(--text-main); }
+    
+    .status-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; display: block; }
+    .status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; display: block; }
 </style>
 
 <div class="pos-container" x-data="posSystem()">
@@ -79,6 +82,12 @@
             </div>
             
             <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                @if(isset($data['kedai']) && $data['kedai']->is_qr_absen_enabled)
+                <button @click="showAbsenModal = true; startQrScanner()" style="font-size: 13px; font-weight: 600; color: white; background: var(--text-main); padding: 10px 16px; border-radius: 20px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                    Absen QR
+                </button>
+                @endif
                 <div style="position: relative;">
                     <button @click="showDrafts = !showDrafts" style="font-size: 13px; font-weight: 600; color: #b45309; background: #fef3c7; padding: 10px 16px; border-radius: 20px; border: 1px solid #fcd34d; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
@@ -270,8 +279,45 @@
             </div>
         </div>
     </div>
+    
+    <!-- Absen QR Modal -->
+    <div x-show="showAbsenModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center;" x-cloak>
+        <div style="background: white; width: 400px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px;">Absensi QR (Karyawan)</h3>
+                <button @click="closeAbsenModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="padding: 24px; text-align: center;">
+                <div id="pos-reader" style="width: 100%; max-width: 300px; margin: 0 auto; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color);"></div>
+                <div x-show="absenStatusText" :class="absenStatusClass" style="margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 600;" x-text="absenStatusText"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div x-show="showToast" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-4"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform translate-y-4"
+         style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); color: white; min-width: 300px; font-weight: 500;"
+         :style="toastType === 'success' ? 'background-color: #10b981;' : 'background-color: #ef4444;'"
+         x-cloak>
+        
+        <svg x-show="toastType === 'success'" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <svg x-show="toastType === 'error'" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        
+        <div x-text="toastMessage" style="flex: 1; font-size: 14px;"></div>
+        
+        <button @click="showToast = false" style="background: none; border: none; color: white; opacity: 0.7; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+            <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
 </div>
 
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('posSystem', () => ({
@@ -293,10 +339,84 @@
             paymentMethod: 'cash',
             amountPaid: 0,
             
+            // Absen QR
+            showAbsenModal: false,
+            absenStatusText: '',
+            absenStatusClass: '',
+            posScanner: null,
+            isScanningAbsen: false,
+            
+            startQrScanner() {
+                if (this.posScanner) return; // already started
+                setTimeout(() => {
+                    this.posScanner = new Html5QrcodeScanner("pos-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+                    this.posScanner.render((decodedText) => this.handleScanSuccess(decodedText), (err) => {});
+                }, 200);
+            },
+            
+            closeAbsenModal() {
+                this.showAbsenModal = false;
+                if (this.posScanner) {
+                    this.posScanner.clear();
+                    this.posScanner = null;
+                }
+                this.absenStatusText = '';
+            },
+            
+            async handleScanSuccess(decodedText) {
+                if (this.isScanningAbsen) return;
+                this.isScanningAbsen = true;
+                this.absenStatusText = 'Memproses...';
+                this.absenStatusClass = '';
+                
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                
+                try {
+                    const res = await fetch('{{ route("admin.staff.absensi.scan") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                        body: JSON.stringify({ qr_code: decodedText })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        this.absenStatusText = data.message;
+                        this.absenStatusClass = 'status-success';
+                        this.showNotification(data.message, 'success');
+                    } else {
+                        this.absenStatusText = data.message;
+                        this.absenStatusClass = 'status-error';
+                    }
+                } catch(e) {
+                    this.absenStatusText = 'Terjadi kesalahan jaringan!';
+                    this.absenStatusClass = 'status-error';
+                }
+                
+                setTimeout(() => {
+                    this.isScanningAbsen = false;
+                    this.absenStatusText = '';
+                }, 3000);
+            },
+            
             // Tax & Promo
             useTax: true,
             promoInput: '',
             discountAmount: 0,
+            appliedVoucherId: null,
+            
+            // Notification System
+            toastMessage: '',
+            toastType: 'success',
+            showToast: false,
+            
+            showNotification(message, type = 'success') {
+                this.toastMessage = message;
+                this.toastType = type;
+                this.showToast = true;
+                setTimeout(() => {
+                    this.showToast = false;
+                }, 3000);
+            },
             
             get filteredProducts() {
                 return this.products.filter(p => {
@@ -320,39 +440,42 @@
                 return Math.max(0, this.subtotal - this.discountAmount) + this.tax;
             },
             
-            applyPromo() {
+            async applyPromo() {
                 let input = this.promoInput.trim();
                 if (!input) return;
                 
-                // Cek jika input persentase (misal: 10%)
-                if (input.endsWith('%')) {
-                    let percent = parseFloat(input.replace('%', ''));
-                    if (!isNaN(percent) && percent > 0 && percent <= 100) {
-                        this.discountAmount = this.subtotal * (percent / 100);
-                        return;
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                
+                try {
+                    const response = await fetch('{{ route("kasir.cek_voucher") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ kode: input, subtotal: this.subtotal })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        this.discountAmount = data.discount_amount;
+                        this.appliedVoucherId = data.voucher_id;
+                        this.showNotification(data.message, 'success');
+                    } else {
+                        this.showNotification(data.message, 'error');
+                        this.discountAmount = 0;
+                        this.appliedVoucherId = null;
                     }
+                } catch (error) {
+                    this.showNotification('Terjadi kesalahan saat mengecek voucher.', 'error');
                 }
-                
-                // Cek jika input angka nominal (misal: 10000)
-                let nominal = parseInt(input);
-                if (!isNaN(nominal) && nominal > 0) {
-                    this.discountAmount = nominal;
-                    return;
-                }
-                
-                // Simulasi Voucher Code
-                if (input.toUpperCase() === 'MOREBREW50') {
-                    this.discountAmount = this.subtotal * 0.5; // Diskon 50%
-                    alert('Berhasil: Voucher MOREBREW50 diterapkan! (Diskon 50%)');
-                    return;
-                }
-                
-                alert('Gagal: Format promo/voucher tidak valid. Masukkan nominal (ex: 15000), persen (ex: 10%), atau kode voucher.');
             },
             
             removePromo() {
                 this.discountAmount = 0;
                 this.promoInput = '';
+                this.appliedVoucherId = null;
+                this.showNotification('Voucher dihapus', 'success');
             },
             
             addToCart(product) {
@@ -379,7 +502,7 @@
             
             saveDraft() {
                 if(!this.customerName.trim()) {
-                    alert('Gagal: Mohon masukkan Nama Pelanggan sebelum menahan pesanan (Draft).');
+                    this.showNotification('Mohon masukkan Nama Pelanggan sebelum menahan pesanan.', 'error');
                     return;
                 }
                 
@@ -395,6 +518,7 @@
                 });
                 
                 this.resetCart();
+                this.showNotification('Pesanan berhasil di-hold (Draft).', 'success');
             },
             
             loadDraft(index) {
@@ -410,6 +534,7 @@
                 this.invoiceNumber = draft.invoiceNumber;
                 
                 this.drafts.splice(index, 1); // remove from draft
+                this.showNotification('Draft berhasil dimuat.', 'success');
             },
             
             resetCart() {
@@ -422,11 +547,12 @@
                 this.discountAmount = 0;
                 this.promoInput = '';
                 this.useTax = true;
+                this.appliedVoucherId = null;
             },
             
             openCheckout() {
                 if(!this.customerName.trim()) {
-                    alert('Gagal: Mohon masukkan Nama Pelanggan terlebih dahulu.');
+                    this.showNotification('Mohon masukkan Nama Pelanggan terlebih dahulu.', 'error');
                     return;
                 }
                 this.amountPaid = this.total; // Default to exact amount
@@ -445,6 +571,7 @@
                     cart: this.cart,
                     subtotal: this.subtotal,
                     discountAmount: this.discountAmount,
+                    voucherId: this.appliedVoucherId,
                     tax: this.tax,
                     total: this.total,
                     paymentMethod: this.paymentMethod,
@@ -484,6 +611,7 @@
                 });
                 
                 this.resetCart();
+                this.showNotification('Pembayaran berhasil!', 'success');
             }
         }));
     });

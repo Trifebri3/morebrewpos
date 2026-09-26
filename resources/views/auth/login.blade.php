@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - MORE BREW POS</title>
+    <title>Login - POS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -165,7 +165,7 @@
     <div class="login-container">
         <div class="login-banner">
             <div class="banner-content">
-                <h1>MORE BREW.</h1>
+                <img src="{{ asset('logo.png') }}" alt="Logo" style="max-width: 200px; margin-bottom: 20px;">
                 <p>Sistem Kasir Pintar (POS) Terintegrasi.<br>Kelola kedai kopi dengan lebih mudah dan cepat.</p>
                 <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 12px; color: #64748b; margin-bottom: 5px;">AKUN DEMO:</div>

@@ -18,9 +18,12 @@ class DashboardService
         }
         
         $products = $query->get();
+        $kedai = \App\Models\Kedai::first();
+        
         return [
             'role' => 'Kasir',
             'dummyUser' => $dummyUser ? $dummyUser->name : 'Kasir',
+            'kedai' => $kedai,
             'navGroups' => [
                 'Utama' => [
                     ['label' => 'POS / Transaksi Baru', 'url' => route('kasir.dashboard'), 'active' => request()->routeIs('kasir.dashboard')],

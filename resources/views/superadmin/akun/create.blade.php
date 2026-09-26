@@ -33,7 +33,7 @@
             
             <div class="form-group">
                 <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required placeholder="Contoh: budi@morebrew.com">
+                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required placeholder="Contoh: budi@example.com">
                 @error('email') <span class="error-text">{{ $message }}</span> @enderror
             </div>
             

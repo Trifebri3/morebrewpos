@@ -45,6 +45,18 @@ class TransaksiController extends Controller
             }
         }
 
+        // Kurangi kuota voucher jika ada dan tambah statistik terpakai
+        if (!empty($data['voucherId'])) {
+            $voucher = \App\Models\Voucher::find($data['voucherId']);
+            if ($voucher) {
+                if ($voucher->kuota !== null && $voucher->kuota > 0) {
+                    $voucher->kuota -= 1;
+                }
+                $voucher->terpakai += 1;
+                $voucher->save();
+            }
+        }
+
         return view('kasir.pdf', compact('data'));
     }
 
