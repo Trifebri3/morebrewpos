@@ -18,7 +18,32 @@
         .text-sm { font-size: 10px; line-height: 1.3; }
     </style>
 </head>
-<body onload="window.print()">
+<body onload="autoPrint()">
+    <script>
+        function autoPrint() {
+            var isAndroid = /android/i.test(navigator.userAgent);
+            if (isAndroid) {
+                // Konversi seluruh HTML ke Base64 untuk dikirim ke RawBT
+                var htmlStr = document.documentElement.outerHTML;
+                // Bersihkan script tag agar tidak loop
+                htmlStr = htmlStr.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+                var b64 = btoa(unescape(encodeURIComponent(htmlStr)));
+                
+                // Intent RawBT untuk parsing HTML
+                var intentUrl = "intent:data:text/html;base64," + b64 + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;action=ru.a402d.rawbtprinter.PARSE;end;";
+                
+                // Redirect ke RawBT
+                window.location.href = intentUrl;
+                
+                // Fallback ke sistem print biasa jika RawBT tidak terinstall
+                setTimeout(function() {
+                    window.print();
+                }, 1500);
+            } else {
+                window.print();
+            }
+        }
+    </script>
     <div class="receipt">
         <div class="center border-bottom">
             <div style="margin-bottom: 5px;"><img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 40px;"></div>
@@ -72,12 +97,22 @@
         <div class="center" style="margin-top: 15px;">
             <div class="bold">TERIMA KASIH</div>
             <div class="text-sm" style="margin-top: 5px;">Silakan datang kembali!</div>
+            @php $kedaiData = \App\Models\Kedai::first(); @endphp
             
+            @if($kedaiData && ($kedaiData->wifi_ssid || $kedaiData->wifi_password))
             <div style="margin-top: 15px; border-top: 1px solid black; padding-top: 10px;">
                 <div class="bold">Wi-Fi Area</div>
-                <div class="text-sm">SSID: Kedai Kopi</div>
-                <div class="text-sm">Pass: Kopi1234</div>
+                @if($kedaiData->wifi_ssid)<div class="text-sm">SSID: {{ $kedaiData->wifi_ssid }}</div>@endif
+                @if($kedaiData->wifi_password)<div class="text-sm">Pass: {{ $kedaiData->wifi_password }}</div>@endif
             </div>
+            @endif
+
+            @if($kedaiData && $kedaiData->instagram)
+            <div style="margin-top: 10px; border-top: 1px solid black; padding-top: 6px;">
+                <div class="bold">Instagram</div>
+                <div class="text-sm">{{ $kedaiData->instagram }}</div>
+            </div>
+            @endif
         </div>
     </div>
 </body>

@@ -24,5 +24,8 @@ Route::get('/absensi', [\App\Http\Controllers\Kasir\AbsensiController::class, 'i
 Route::post('/absensi', [\App\Http\Controllers\Kasir\AbsensiController::class, 'store'])->name('kasir.absensi.store');
 Route::get('/jadwal-shift', [\App\Http\Controllers\Kasir\ShiftController::class, 'index'])->name('kasir.shift_jadwal');
 Route::get('/status-meja', [\App\Http\Controllers\Kasir\MejaController::class, 'index'])->name('kasir.meja');
+Route::get('/status-meja/{meja}/qr', [\App\Http\Controllers\Kasir\MejaController::class, 'downloadQr'])->name('kasir.meja.qr');
 Route::post('/cek-voucher', [\App\Http\Controllers\Kasir\VoucherController::class, 'cek'])->name('kasir.cek_voucher');
-Route::get('/tutup-kasir', [\App\Http\Controllers\Kasir\PlaceholderController::class, 'show'])->name('kasir.tutup');
+Route::get('/tutup-kasir', [\App\Http\Controllers\Kasir\SesiController::class, 'index'])->name('kasir.tutup');
+Route::post('/sesi/buka', [\App\Http\Controllers\Kasir\SesiController::class, 'buka'])->name('kasir.sesi.buka');
+Route::post('/sesi/tutup', [\App\Http\Controllers\Kasir\SesiController::class, 'tutup'])->name('kasir.sesi.tutup');

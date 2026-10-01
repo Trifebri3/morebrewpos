@@ -128,7 +128,10 @@ class AbsensiController extends Controller
         if ($kedai) {
             $kedai->update([
                 'is_qr_absen_enabled' => $request->has('is_qr_absen_enabled'),
-                'is_link_absen_enabled' => $request->has('is_link_absen_enabled')
+                'is_link_absen_enabled' => $request->has('is_link_absen_enabled'),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'radius_meter' => $request->radius_meter ?? 50
             ]);
         }
         

@@ -36,6 +36,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ID Karyawan / Email</label>
                     <input type="text" id="identifier" class="w-full border-gray-300 rounded-lg shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="Masukkan ID Anda..." required>
+                    <p id="user-name-display" class="text-sm font-semibold mt-2 hidden"></p>
                 </div>
 
                 <div>
@@ -113,6 +114,50 @@
         } else {
             showLocationError("Browser Anda tidak mendukung GPS Geolocation.");
         }
+
+        // Live Check ID Karyawan
+        const identifierInput = document.getElementById('identifier');
+        const userNameDisplay = document.getElementById('user-name-display');
+        let checkTimeout;
+
+        identifierInput.addEventListener('input', function() {
+            clearTimeout(checkTimeout);
+            const val = this.value.trim();
+            
+            if (val.length === 0) {
+                userNameDisplay.classList.add('hidden');
+                return;
+            }
+
+            userNameDisplay.textContent = "Mencari...";
+            userNameDisplay.className = "text-sm font-medium text-gray-500 mt-2 block animate-pulse";
+
+            checkTimeout = setTimeout(async () => {
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                try {
+                    const response = await fetch("{{ url('/absen/check') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({ identifier: val })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        userNameDisplay.textContent = "👋 Halo, " + result.name;
+                        userNameDisplay.className = "text-sm font-bold text-green-600 mt-2 block";
+                    } else {
+                        userNameDisplay.textContent = "❌ Karyawan tidak ditemukan.";
+                        userNameDisplay.className = "text-sm font-medium text-red-500 mt-2 block";
+                    }
+                } catch (e) {
+                    console.error("Error checking user:", e);
+                    userNameDisplay.classList.add('hidden');
+                }
+            }, 600); // 600ms debounce
+        });
 
         // 2. Start Camera
         async function startCamera() {

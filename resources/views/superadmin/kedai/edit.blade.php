@@ -34,6 +34,21 @@
             <input type="checkbox" name="is_active" id="is_active" value="1" {{ $kedai->is_active ? 'checked' : '' }}>
             <label for="is_active" style="margin: 0; font-weight: 400; cursor: pointer;">Kedai Aktif</label>
         </div>
+
+        <h3 style="margin-top: 32px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Pengaturan Struk (Receipt)</h3>
+        
+        <div class="form-group">
+            <label>Wi-Fi SSID</label>
+            <input type="text" name="wifi_ssid" value="{{ $kedai->wifi_ssid }}" placeholder="Contoh: moreandmore">
+        </div>
+        <div class="form-group">
+            <label>Wi-Fi Password</label>
+            <input type="text" name="wifi_password" value="{{ $kedai->wifi_password }}" placeholder="Contoh: bolehlihatsenyumnya?">
+        </div>
+        <div class="form-group">
+            <label>Instagram</label>
+            <input type="text" name="instagram" value="{{ $kedai->instagram }}" placeholder="Contoh: @morebrewcoffee">
+        </div>
         
         <button type="submit" class="btn-submit">Update Kedai</button>
     </form>

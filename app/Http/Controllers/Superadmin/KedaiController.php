@@ -55,6 +55,9 @@ class KedaiController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
+            'wifi_ssid' => 'nullable|string|max:255',
+            'wifi_password' => 'nullable|string|max:255',
+            'instagram' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
@@ -62,6 +65,9 @@ class KedaiController extends Controller
             'name' => $validated['name'],
             'address' => $validated['address'] ?? null,
             'phone' => $validated['phone'] ?? null,
+            'wifi_ssid' => $validated['wifi_ssid'] ?? null,
+            'wifi_password' => $validated['wifi_password'] ?? null,
+            'instagram' => $validated['instagram'] ?? null,
             'is_active' => $request->has('is_active'),
         ]);
 

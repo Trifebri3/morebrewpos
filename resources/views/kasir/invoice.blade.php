@@ -84,7 +84,7 @@
                         ];
                     @endphp
                     <button class="btn-action" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;" onclick='showDetail(@json($detailData))'>Detail</button>
-                    <button class="btn-action" onclick="cetakUlang({{ $inv->id }})">Cetak Ulang</button>
+                    <button class="btn-action" onclick='cetakUlang({{ $inv->id }}, @json($detailData))'>Cetak Ulang</button>
                 </td>
             </tr>
             @empty
@@ -215,7 +215,40 @@ function showDetail(data) {
     document.getElementById('detailModal').style.display = 'flex';
 }
 
-function cetakUlang(id) {
+function cetakUlang(id, data) {
+    if (window.thermalPrinter && window.thermalPrinter.isConnected() && data) {
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "Mencetak...";
+        btn.disabled = true;
+
+        // Note: the payload expects cart, orderType, customerName, etc.
+        // We remap the detailData properties slightly to match checkout format.
+        const printPayload = {
+            invoiceNumber: data.invoice,
+            customerName: data.customer,
+            orderType: data.type === 'Take Away' ? 'take_away' : 'dine_in',
+            cart: data.items,
+            subtotal: parseFloat(data.subtotal),
+            discountAmount: parseFloat(data.discount),
+            tax: parseFloat(data.tax),
+            total: parseFloat(data.total)
+        };
+
+        window.thermalPrinter.printReceipt(printPayload)
+            .then(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Gagal cetak: " + err.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+        return;
+    }
+
     const btn = event.target;
     const originalText = btn.innerText;
     btn.innerText = "Loading...";

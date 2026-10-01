@@ -18,4 +18,13 @@ class MejaController extends Controller
         
         return view('kasir.meja.index', compact('data', 'mejas'));
     }
+
+    public function downloadQr(Meja $meja)
+    {
+        $url = url('/order?meja=' . $meja->qr_hash);
+        $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->generate($url);
+        
+        return response($qrCode)
+            ->header('Content-Type', 'image/svg+xml');
+    }
 }

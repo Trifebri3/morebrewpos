@@ -50,7 +50,7 @@ Route::prefix('staff')->name('admin.staff.')->group(function () {
     Route::get('/absensi', [\App\Http\Controllers\Admin\AbsensiController::class, 'index'])->name('absensi');
     Route::post('/absensi/settings', [\App\Http\Controllers\Admin\AbsensiController::class, 'updateSettings'])->name('absensi.settings.update');
     Route::post('/absensi/scan', [\App\Http\Controllers\Admin\AbsensiController::class, 'scan'])->name('absensi.scan');
-    Route::get('/aktivitas', [PlaceholderController::class, 'show'])->name('aktivitas');
+    Route::get('/aktivitas', [\App\Http\Controllers\Admin\AktivitasController::class, 'index'])->name('aktivitas');
 });
 
 Route::prefix('laporan')->name('admin.laporan.')->group(function () {

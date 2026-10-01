@@ -13,6 +13,7 @@ Route::get('/order/track/{invoice}', [\App\Http\Controllers\OrderController::cla
 
 Route::get('/absen', [\App\Http\Controllers\AbsensiController::class, 'showPublicForm'])->name('absen');
 Route::post('/absen', [\App\Http\Controllers\AbsensiController::class, 'submitPublicAbsen']);
+Route::post('/absen/check', [\App\Http\Controllers\AbsensiController::class, 'checkUser']);
 
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;

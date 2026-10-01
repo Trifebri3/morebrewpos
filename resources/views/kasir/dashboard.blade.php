@@ -580,7 +580,7 @@
                 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
                 
-                // Simpan ke database via AJAX, lalu cetak menggunakan iframe tersembunyi
+                // Simpan ke database via AJAX
                 fetch('{{ route("kasir.cetak_struk") }}', {
                     method: 'POST',
                     headers: {
@@ -591,23 +591,30 @@
                 })
                 .then(res => res.text())
                 .then(html => {
-                    // Hapus iframe print lama jika ada
-                    const oldIframe = document.getElementById('print-iframe');
-                    if (oldIframe) oldIframe.remove();
-                    
-                    const iframe = document.createElement('iframe');
-                    iframe.id = 'print-iframe';
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
-                    
-                    iframe.contentDocument.open();
-                    iframe.contentDocument.write(html);
-                    iframe.contentDocument.close();
-                    
-                    setTimeout(() => {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-                    }, 500);
+                    if (window.thermalPrinter && window.thermalPrinter.isConnected()) {
+                        // Print directly to connected Web Bluetooth thermal printer
+                        window.thermalPrinter.printReceipt(payload)
+                            .then(() => console.log("Printed via Web Bluetooth"))
+                            .catch(err => console.error("WebBT Print error:", err));
+                    } else {
+                        // Fallback: Cetak menggunakan iframe tersembunyi (RawBT / System Print)
+                        const oldIframe = document.getElementById('print-iframe');
+                        if (oldIframe) oldIframe.remove();
+                        
+                        const iframe = document.createElement('iframe');
+                        iframe.id = 'print-iframe';
+                        iframe.style.display = 'none';
+                        document.body.appendChild(iframe);
+                        
+                        iframe.contentDocument.open();
+                        iframe.contentDocument.write(html);
+                        iframe.contentDocument.close();
+                        
+                        setTimeout(() => {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                        }, 500);
+                    }
                 });
                 
                 this.resetCart();

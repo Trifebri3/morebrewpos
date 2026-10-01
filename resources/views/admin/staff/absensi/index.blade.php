@@ -54,7 +54,7 @@
                     </div>
                     <div>
                         <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
-                            <input type="checkbox" name="is_qr_absen_enabled" value="1" onchange="this.form.submit()" {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? 'checked' : '' }} style="opacity: 0; width: 0; height: 0;">
+                            <input type="checkbox" name="is_qr_absen_enabled" value="1" {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? 'checked' : '' }} style="opacity: 0; width: 0; height: 0;">
                             <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? 'var(--text-main)' : '#ccc' }}; transition: .4s; border-radius: 34px;">
                                 <span style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? 'translateX(22px)' : 'translateX(0)' }};"></span>
                             </span>
@@ -62,26 +62,62 @@
                     </div>
                 </div>
                 
-                <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; align-items: flex-start; gap: 16px; margin-top: 16px;">
-                    <div style="flex: 1;">
-                        <h3 style="margin: 0 0 8px 0; font-size: 16px; color: var(--text-main);">Absen Via Tautan Publik (GPS + Selfie)</h3>
-                        <p style="margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                            Karyawan melakukan absen melalui HP mereka masing-masing dengan mengakses tautan publik di bawah. Sistem akan meminta deteksi lokasi (Geofencing sesuai radius Kedai) dan swafoto (selfie).
-                        </p>
-                        
-                        <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border-color);">
-                            <div style="font-family: monospace; font-size: 13px; font-weight: 600; color: #334155;">{{ url('/absen') }}</div>
-                            <button type="button" onclick="navigator.clipboard.writeText('{{ url('/absen') }}'); alert('Tautan disalin!')" style="background: white; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Salin Tautan</button>
+                <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-top: 16px;">
+                    <div style="display: flex; align-items: flex-start; gap: 16px;">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 8px 0; font-size: 16px; color: var(--text-main);">Absen Via Tautan Publik (GPS + Selfie) & Geofencing</h3>
+                            <p style="margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                                Karyawan melakukan absen melalui HP mereka masing-masing dengan mengakses tautan publik di bawah. Sistem akan meminta deteksi lokasi (Geofencing sesuai radius Kedai) dan swafoto (selfie).
+                            </p>
+                            
+                            <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border-color);">
+                                <div style="font-family: monospace; font-size: 13px; font-weight: 600; color: #334155;">{{ url('/absen') }}</div>
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ url('/absen') }}'); alert('Tautan disalin!')" style="background: white; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Salin Tautan</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
+                                <input type="checkbox" name="is_link_absen_enabled" value="1" {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'checked' : '' }} style="opacity: 0; width: 0; height: 0;">
+                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'var(--text-main)' : '#ccc' }}; transition: .4s; border-radius: 34px;">
+                                    <span style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'translateX(22px)' : 'translateX(0)' }};"></span>
+                                </span>
+                            </label>
                         </div>
                     </div>
+                    
+                    <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+                    
                     <div>
-                        <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
-                            <input type="checkbox" name="is_link_absen_enabled" value="1" onchange="this.form.submit()" {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'checked' : '' }} style="opacity: 0; width: 0; height: 0;">
-                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'var(--text-main)' : '#ccc' }}; transition: .4s; border-radius: 34px;">
-                                <span style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; transform: {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'translateX(22px)' : 'translateX(0)' }};"></span>
-                            </span>
-                        </label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div>
+                                <h3 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">Lokasi Koordinat & Radius Absensi</h3>
+                                <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Tentukan titik kordinat Kedai dan maksimal radius jarak karyawan.</p>
+                            </div>
+                            <button type="button" id="btn-get-location" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Ambil Titik Sekarang
+                            </button>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">Latitude</label>
+                                <input type="text" id="input-lat" name="latitude" value="{{ $kedai->latitude ?? '' }}" placeholder="Contoh: -6.200000" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">Longitude</label>
+                                <input type="text" id="input-lon" name="longitude" value="{{ $kedai->longitude ?? '' }}" placeholder="Contoh: 106.816666" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">Radius (Meter)</label>
+                                <input type="number" name="radius_meter" value="{{ $kedai->radius_meter ?? 50 }}" placeholder="Contoh: 50" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="submit" style="background: var(--text-main); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Simpan Pengaturan</button>
                 </div>
             </form>
         </div>
@@ -179,4 +215,34 @@
     </div>
 </div>
 
+<script>
+    document.getElementById('btn-get-location').addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = 'Mencari Lokasi...';
+        btn.disabled = true;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    document.getElementById('input-lat').value = position.coords.latitude;
+                    document.getElementById('input-lon').value = position.coords.longitude;
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                },
+                function(error) {
+                    alert('Gagal mendapatkan lokasi: ' + error.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                },
+                { enableHighAccuracy: true }
+            );
+        } else {
+            alert('Browser Anda tidak mendukung Geolocation.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+</script>
 @endsection

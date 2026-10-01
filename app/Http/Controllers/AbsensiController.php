@@ -112,6 +112,21 @@ class AbsensiController extends Controller
         ]);
     }
 
+    public function checkUser(Request $request)
+    {
+        $request->validate(['identifier' => 'required']);
+        $user = User::where('email', $request->identifier)
+                    ->orWhere('qr_code', $request->identifier)
+                    ->orWhere('id', $request->identifier)
+                    ->first();
+
+        if ($user) {
+            return response()->json(['success' => true, 'name' => $user->name]);
+        }
+
+        return response()->json(['success' => false]);
+    }
+
     private function calculateDistance($lat1, $lon1, $lat2, $lon2) {
         $earthRadius = 6371000; // in meters
         
