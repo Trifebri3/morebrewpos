@@ -66,6 +66,15 @@ class AbsensiController extends Controller
         ]));
     }
 
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2) {
+        $earthRadius = 6371000;
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lonDelta = deg2rad($lon2 - $lon1);
+        $a = sin($latDelta / 2) * sin($latDelta / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lonDelta / 2) * sin($lonDelta / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $earthRadius * $c;
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -73,6 +82,17 @@ class AbsensiController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ]);
+
+        $kedai = \App\Models\Kedai::first();
+        if ($kedai && $kedai->latitude && $kedai->longitude) {
+            if (!$request->latitude || !$request->longitude) {
+                return redirect()->back()->with('error', 'Lokasi (GPS) wajib diaktifkan untuk melakukan absen.');
+            }
+            $distance = $this->calculateDistance($kedai->latitude, $kedai->longitude, $request->latitude, $request->longitude);
+            if ($distance > $kedai->radius_meter) {
+                return redirect()->back()->with('error', 'Anda berada di luar zona absen. Jarak Anda: ' . round($distance) . 'm (Maks: ' . $kedai->radius_meter . 'm).');
+            }
+        }
 
         // Cek jika sudah absensi tipe tersebut hari ini
         $sudah = Absensi::where('user_id', auth()->id())

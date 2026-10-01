@@ -65,7 +65,7 @@ class AbsensiController extends Controller
         if ($kedai->latitude && $kedai->longitude) {
             $distance = $this->calculateDistance($kedai->latitude, $kedai->longitude, $request->latitude, $request->longitude);
             if ($distance > $kedai->radius_meter) {
-                $status = 'Luar Zona Kedai (' . round($distance) . 'm)';
+                return response()->json(['success' => false, 'message' => 'Anda berada di luar zona absen. Jarak Anda: ' . round($distance) . 'm. Radius Maksimal: ' . $kedai->radius_meter . 'm']);
             }
         }
 

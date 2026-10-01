@@ -70,10 +70,12 @@
             </div>
         @else
             @if(!$sudahMasuk)
-                <form action="{{ route('kasir.absensi.store') }}" method="POST">
+                <form id="form-masuk" action="{{ route('kasir.absensi.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="type" value="Masuk">
-                    <button type="submit" class="btn-action btn-masuk">
+                    <input type="hidden" name="latitude" id="lat-masuk">
+                    <input type="hidden" name="longitude" id="lon-masuk">
+                    <button type="button" onclick="submitAbsenForm('form-masuk', 'lat-masuk', 'lon-masuk')" class="btn-action btn-masuk">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                         Clock In (Masuk)
                     </button>
@@ -81,10 +83,12 @@
             @endif
 
             @if($sudahMasuk && !$sudahKeluar)
-                <form action="{{ route('kasir.absensi.store') }}" method="POST">
+                <form id="form-keluar" action="{{ route('kasir.absensi.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="type" value="Keluar">
-                    <button type="submit" class="btn-action btn-keluar">
+                    <input type="hidden" name="latitude" id="lat-keluar">
+                    <input type="hidden" name="longitude" id="lon-keluar">
+                    <button type="button" onclick="submitAbsenForm('form-keluar', 'lat-keluar', 'lon-keluar')" class="btn-action btn-keluar">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Clock Out (Keluar)
                     </button>
@@ -217,5 +221,33 @@
     });
 </script>
 @endif
+
+<script>
+    function submitAbsenForm(formId, latId, lonId) {
+        if (!navigator.geolocation) {
+            alert("Browser Anda tidak mendukung fitur lokasi. Pastikan menggunakan browser versi terbaru.");
+            return;
+        }
+
+        const btn = document.querySelector(`#${formId} button`);
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Mencari Lokasi...';
+        btn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                document.getElementById(latId).value = position.coords.latitude;
+                document.getElementById(lonId).value = position.coords.longitude;
+                document.getElementById(formId).submit();
+            },
+            function(error) {
+                alert("Gagal mendapatkan lokasi GPS. Mohon izinkan akses lokasi pada browser Anda.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    }
+</script>
 
 @endsection
