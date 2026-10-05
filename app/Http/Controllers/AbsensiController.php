@@ -23,9 +23,9 @@ class AbsensiController extends Controller
             return 'Fitur Absensi via Tautan saat ini dinonaktifkan oleh Admin.';
         }
 
-        $karyawans = User::whereIn('role', ['admin', 'kasir'])
+        $karyawans = User::whereIn('role', ['staff', 'kasir', 'admin'])
             ->orderBy('name')
-            ->get(['id', 'name', 'role', 'email']);
+            ->get(['id', 'name', 'role', 'position', 'email']);
 
         return view('absen', compact('kedai', 'karyawans'));
     }
@@ -45,14 +45,11 @@ class AbsensiController extends Controller
             return response()->json(['success' => false, 'message' => 'Fitur absensi via tautan saat ini dinonaktifkan oleh Admin.']);
         }
 
-        // Cari user berdasarkan email atau qr_code (atau ID)
-        $user = User::where('email', $request->identifier)
-            ->orWhere('qr_code', $request->identifier)
-            ->orWhere('id', $request->identifier)
-            ->first();
+        // Cari user berdasarkan nama, ID, email, atau QR code
+        $user = $this->findUserByIdentifier($request->identifier);
 
         if (! $user) {
-            return response()->json(['success' => false, 'message' => 'Identitas Karyawan tidak ditemukan.']);
+            return response()->json(['success' => false, 'message' => 'Identitas Karyawan tidak terdaftar. Absensi ditolak!']);
         }
 
         // Cek absensi hari ini (Mencegah absen ganda)
@@ -120,10 +117,7 @@ class AbsensiController extends Controller
     public function checkUser(Request $request)
     {
         $request->validate(['identifier' => 'required']);
-        $user = User::where('email', $request->identifier)
-            ->orWhere('qr_code', $request->identifier)
-            ->orWhere('id', $request->identifier)
-            ->first();
+        $user = $this->findUserByIdentifier($request->identifier);
 
         if ($user) {
             $absenMasuk = Absensi::where('user_id', $user->id)
@@ -148,6 +142,7 @@ class AbsensiController extends Controller
                 'name' => $user->name,
                 'user_id' => $user->id,
                 'role' => ucfirst($user->role),
+                'position' => $user->position ?: ($user->role === 'admin' ? 'Administrator' : 'Staf Kedai'),
                 'has_masuk' => (bool) $absenMasuk,
                 'masuk_time' => $absenMasuk ? $absenMasuk->created_at->format('H:i') : null,
                 'has_keluar' => (bool) $absenKeluar,
@@ -156,7 +151,47 @@ class AbsensiController extends Controller
             ]);
         }
 
-        return response()->json(['success' => false]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Identitas Karyawan "'.htmlspecialchars($request->identifier).'" tidak ditemukan. Absensi ditolak!',
+        ]);
+    }
+
+    public function findUserByIdentifier(?string $identifier): ?User
+    {
+        if (! $identifier) {
+            return null;
+        }
+
+        $identifier = trim($identifier);
+        if ($identifier === '' || $identifier === '0' || preg_match('/^0+$/', $identifier)) {
+            return null;
+        }
+
+        // 1. Cek apakah input ID numerik (contoh: 5, 05, 005, #5)
+        $cleanId = ltrim(str_replace('#', '', $identifier), '0');
+        if ($cleanId !== '' && ctype_digit($cleanId) && (int) $cleanId > 0) {
+            $user = User::find((int) $cleanId);
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 2. Cek apakah cocok dengan nama lengkap (case-insensitive)
+        $userByName = User::whereRaw('LOWER(name) = ?', [strtolower($identifier)])->first();
+        if ($userByName) {
+            return $userByName;
+        }
+
+        // 3. Cek apakah cocok dengan email atau QR code
+        $userByEmailOrQr = User::where('email', $identifier)
+            ->orWhere('qr_code', $identifier)
+            ->first();
+        if ($userByEmailOrQr) {
+            return $userByEmailOrQr;
+        }
+
+        return null;
     }
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)

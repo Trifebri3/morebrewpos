@@ -51,10 +51,13 @@
             color: #991b1b !important;
             box-shadow: 0 0 0 2px #ef4444;
         }
-        .type-card.disabled-card {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background-color: #f8fafc;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -105,50 +108,101 @@
             <!-- Form Absensi Utama -->
             <form id="absen-form" class="space-y-6 hidden">
                 
-                <!-- 1. IDENTITAS KARYAWAN -->
+                <!-- 1. IDENTIFIKASI KARYAWAN (NAMA ATAU ID) -->
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">1. Pilih / Masukkan Nama Pegawai</label>
-                        <span class="text-[11px] text-slate-400 font-medium">Wajib</span>
+                        <span id="validation-pill" class="text-[11px] font-bold text-slate-400">Verifikasi Wajib</span>
                     </div>
 
                     @if(isset($karyawans) && count($karyawans) > 0)
-                    <!-- Dropdown Cepat Nama Pegawai -->
+                    <!-- Dropdown Pilihan Cepat Pegawai -->
                     <div class="relative mb-2">
-                        <select id="employee-dropdown" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-800 outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition" onchange="selectEmployeeFromDropdown(this)">
-                            <option value="">-- Sentuh untuk Pilih Nama Anda --</option>
+                        <select id="employee-dropdown" 
+                                onchange="selectEmployeeFromDropdown(this)"
+                                class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-black transition cursor-pointer">
+                            <option value="">-- Pilih dari Daftar Pegawai (1-Klik) --</option>
                             @foreach($karyawans as $k)
-                                <option value="{{ $k->id }}" data-name="{{ $k->name }}">{{ $k->name }} ({{ ucfirst($k->role) }})</option>
+                                <option value="{{ $k->name }}" data-id="{{ $k->id }}">
+                                    {{ $k->name }} ({{ $k->position ?: ($k->role === 'admin' ? 'Administrator' : 'Staf Kedai') }} • ID: #{{ $k->id }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     @endif
 
-                    <!-- Input ID / Email Alternatif -->
+                    <!-- Input Nama atau ID Tunggal -->
                     <div class="relative">
-                        <input type="text" id="identifier" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-black focus:ring-1 focus:ring-black transition" placeholder="Atau ketik ID / Email / Scan barcode..." required>
-                        <div id="identifier-spinner" class="absolute right-3.5 top-3.5 hidden">
+                        <input type="text" 
+                               id="identifier" 
+                               class="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-black transition" 
+                               placeholder="Atau ketik Nama (cth: Bila, ajay) atau ID (cth: 5)..." 
+                               autocomplete="off"
+                               required>
+                        
+                        <div id="identifier-spinner" class="absolute right-4 top-4 hidden">
                             <svg class="w-4 h-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </div>
                     </div>
 
-                    <!-- Greeting & Identity Feedback -->
-                    <div id="user-greeting-box" class="mt-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 hidden">
-                        <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center" id="avatar-initial">-</div>
-                            <div>
-                                <div class="text-sm font-bold text-slate-900" id="user-name-text">-</div>
-                                <div class="text-[11px] text-slate-500 font-medium" id="user-role-text">-</div>
+                    <!-- Quick Tap Chip List (Semua Karyawan: Bila, ajay, Ale, Beta, Admin, dll) -->
+                    @if(isset($karyawans) && count($karyawans) > 0)
+                    <div class="mt-2.5">
+                        <div class="text-[11px] font-bold uppercase text-slate-400 mb-1.5 flex items-center justify-between">
+                            <span>Atau Sentuh Cepat Nama:</span>
+                            <span class="text-[10px] text-slate-400">1-Sentuh</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pb-1">
+                            @foreach($karyawans as $k)
+                                <button type="button" 
+                                        onclick="selectEmployeeChip('{{ addslashes($k->name) }}', '{{ $k->id }}')" 
+                                        class="employee-chip px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-bold hover:bg-black hover:text-white hover:border-black active:scale-95 transition"
+                                        id="chip-emp-{{ $k->id }}">
+                                    {{ $k->name }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- KOTAK STATUS: JIKA VALID (HIJAU ✓) -->
+                    <div id="user-valid-box" class="mt-3 p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/80 text-emerald-950 hidden">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-full bg-emerald-600 text-white text-sm font-extrabold flex items-center justify-center shadow-sm" id="avatar-initial">-</div>
+                                <div>
+                                    <div class="text-sm font-extrabold text-slate-900" id="user-name-text">-</div>
+                                    <div class="text-xs text-emerald-700 font-semibold" id="user-role-text">-</div>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="3"/></svg>
+                                Valid
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- KOTAK STATUS: JIKA DITOLAK (MERAH ✕) -->
+                    <div id="user-invalid-box" class="mt-3 p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-500/80 text-rose-950 hidden animate-shake">
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                                ✕
+                            </div>
+                            <div class="text-xs">
+                                <p class="font-extrabold text-rose-900 text-[13px]">Karyawan Ditolak / Tidak Ditemukan!</p>
+                                <p class="text-rose-700 mt-0.5 leading-relaxed" id="user-invalid-message">
+                                    Nama atau ID tidak terdaftar di sistem kedai. Absensi tidak dapat diproses.
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. ALUR ABSEN HARIAN (MASUK & KELUAR) -->
+                <!-- 2. SESI PRESENSI HARIAN (MASUK & KELUAR) -->
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">2. Sesi Presensi Hari Ini</label>
-                        <span id="shift-recommendation" class="text-[11px] font-bold text-emerald-600">Pilih Aksi</span>
+                        <span id="shift-recommendation" class="text-[11px] font-bold text-slate-500">Pilih Masuk / Keluar</span>
                     </div>
 
                     <!-- Dual Cards: Masuk & Keluar -->
@@ -210,12 +264,12 @@
 
                     <!-- All Done Banner -->
                     <div id="all-completed-banner" class="mt-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 hidden flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke-width="3"/></svg>
                         </div>
                         <div class="text-xs">
-                            <p class="font-extrabold text-emerald-950">Presensi Hari Ini Selesai!</p>
-                            <p class="text-emerald-700 mt-0.5">Anda sudah menyelesaikan Absen Masuk & Keluar.</p>
+                            <p class="font-extrabold text-emerald-950">Presensi Hari Ini Lengkap!</p>
+                            <p class="text-emerald-700 mt-0.5">Anda sudah menyelesaikan Absen Masuk & Keluar hari ini.</p>
                         </div>
                     </div>
                 </div>
@@ -248,10 +302,10 @@
                     <p class="text-[11px] text-slate-400 text-center mt-1.5">Posisikan wajah Anda tepat di dalam bingkai oval.</p>
                 </div>
 
-                <!-- TOMBOL SUBMIT BESAR & TAKTIL -->
-                <button type="submit" id="btn-submit" class="w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-black hover:bg-slate-900 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:pointer-events-none">
+                <!-- TOMBOL SUBMIT BESAR & TAKTIL (DIKUNCI JIKA TIDAK VALID) -->
+                <button type="submit" id="btn-submit" disabled class="w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-slate-300 cursor-not-allowed transition-all flex items-center justify-center gap-2.5">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span id="btn-submit-label">Ambil Foto & Catat Kehadiran</span>
+                    <span id="btn-submit-label">Masukkan Nama / ID Karyawan Dahulu</span>
                 </button>
             </form>
         </div>
@@ -294,11 +348,15 @@
         const locationText = document.getElementById('location-text');
         const btnSubmit = document.getElementById('btn-submit');
         const btnSubmitLabel = document.getElementById('btn-submit-label');
+        const identifierInput = document.getElementById('identifier');
+        const validationPill = document.getElementById('validation-pill');
         
         let userLat = null;
         let userLon = null;
         let stream = null;
         let currentFacingMode = "user";
+        let isEmployeeValid = false;
+        let validatedIdentifier = '';
 
         const kedaiLat = {{ $kedai->latitude ?? 'null' }};
         const kedaiLon = {{ $kedai->longitude ?? 'null' }};
@@ -352,8 +410,12 @@
                 dotMasuk.className = 'w-3.5 h-3.5 rounded-full border-2 border-emerald-600 flex items-center justify-center';
                 dotKeluar.innerHTML = '';
                 dotKeluar.className = 'w-3.5 h-3.5 rounded-full border-2 border-slate-300 flex items-center justify-center';
-                btnSubmitLabel.innerText = "Ambil Foto & Absen Masuk";
-                btnSubmit.className = "w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5";
+                
+                if (isEmployeeValid) {
+                    btnSubmitLabel.innerText = "Ambil Foto & Absen Masuk";
+                    btnSubmit.className = "w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer";
+                    btnSubmit.disabled = false;
+                }
             } else {
                 radioKeluar.checked = true;
                 radioMasuk.checked = false;
@@ -363,38 +425,74 @@
                 dotKeluar.className = 'w-3.5 h-3.5 rounded-full border-2 border-rose-600 flex items-center justify-center';
                 dotMasuk.innerHTML = '';
                 dotMasuk.className = 'w-3.5 h-3.5 rounded-full border-2 border-slate-300 flex items-center justify-center';
-                btnSubmitLabel.innerText = "Ambil Foto & Absen Keluar";
-                btnSubmit.className = "w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5";
+                
+                if (isEmployeeValid) {
+                    btnSubmitLabel.innerText = "Ambil Foto & Absen Keluar";
+                    btnSubmit.className = "w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer";
+                    btnSubmit.disabled = false;
+                }
             }
         }
 
         // Initialize default selection
         selectType('Masuk');
 
-        // 4. Employee Dropdown & Identification
+        // 4. Employee Selection & Real-time Live Validation (Valid vs Ditolak)
         function selectEmployeeFromDropdown(dropdown) {
             const val = dropdown.value;
             if (val) {
-                document.getElementById('identifier').value = val;
+                identifierInput.value = val;
+                const selectedOpt = dropdown.options[dropdown.selectedIndex];
+                const empId = selectedOpt.getAttribute('data-id');
+                if (empId) {
+                    highlightChip(empId);
+                }
                 checkEmployeeStatus(val);
+            } else {
+                identifierInput.value = '';
+                resetValidationState();
             }
         }
 
-        const identifierInput = document.getElementById('identifier');
-        let checkTimeout;
+        function highlightChip(id) {
+            document.querySelectorAll('.employee-chip').forEach(c => {
+                c.classList.remove('bg-black', 'text-white', 'border-black');
+                c.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+            });
+            const activeChip = document.getElementById('chip-emp-' + id);
+            if (activeChip) {
+                activeChip.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+                activeChip.classList.add('bg-black', 'text-white', 'border-black');
+            }
+        }
 
+        function selectEmployeeChip(name, id) {
+            identifierInput.value = name;
+            const dropdown = document.getElementById('employee-dropdown');
+            if (dropdown) {
+                for (let i = 0; i < dropdown.options.length; i++) {
+                    if (dropdown.options[i].getAttribute('data-id') == id || dropdown.options[i].value === name) {
+                        dropdown.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            highlightChip(id);
+            checkEmployeeStatus(name);
+        }
+
+        let checkTimeout;
         identifierInput.addEventListener('input', function() {
             clearTimeout(checkTimeout);
             const val = this.value.trim();
             if (val.length === 0) {
-                document.getElementById('user-greeting-box').classList.add('hidden');
-                resetAttendanceStatusDisplay();
+                resetValidationState();
                 return;
             }
             document.getElementById('identifier-spinner').classList.remove('hidden');
             checkTimeout = setTimeout(() => {
                 checkEmployeeStatus(val);
-            }, 500);
+            }, 350);
         });
 
         async function checkEmployeeStatus(identifier) {
@@ -411,15 +509,41 @@
                 const result = await response.json();
                 document.getElementById('identifier-spinner').classList.add('hidden');
 
+                const validBox = document.getElementById('user-valid-box');
+                const invalidBox = document.getElementById('user-invalid-box');
+
                 if (result.success) {
-                    // Update Greeting Box
-                    const greetingBox = document.getElementById('user-greeting-box');
-                    greetingBox.classList.remove('hidden');
+                    // KONDISI VALID (HIJAU ✓)
+                    isEmployeeValid = true;
+                    validatedIdentifier = identifier;
+
+                    // Sync Dropdown jika belum sama
+                    const dropdown = document.getElementById('employee-dropdown');
+                    if (dropdown) {
+                        for (let i = 0; i < dropdown.options.length; i++) {
+                            if (dropdown.options[i].getAttribute('data-id') == result.user_id || dropdown.options[i].value.toLowerCase() === result.name.toLowerCase()) {
+                                dropdown.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    highlightChip(result.user_id);
+
+                    // Update UI state to Valid
+                    identifierInput.classList.remove('border-rose-500', 'border-slate-200');
+                    identifierInput.classList.add('border-emerald-500');
+
+                    validationPill.className = "text-[11px] font-bold text-emerald-600";
+                    validationPill.innerText = "✓ Identitas Valid";
+
+                    invalidBox.classList.add('hidden');
+                    validBox.classList.remove('hidden');
+
                     document.getElementById('avatar-initial').innerText = result.name.charAt(0).toUpperCase();
                     document.getElementById('user-name-text').innerText = result.name;
-                    document.getElementById('user-role-text').innerText = `${result.role || 'Staf Operasional'} • ID: #${result.user_id}`;
+                    document.getElementById('user-role-text').innerText = `${result.position || result.role} • ID #${result.user_id}`;
 
-                    // Update In/Out Badges
+                    // Update Attendance Journey
                     const badgeMasuk = document.getElementById('badge-masuk-done');
                     const badgeKeluar = document.getElementById('badge-keluar-done');
                     const subtextMasuk = document.getElementById('status-masuk-subtext');
@@ -449,22 +573,47 @@
                         selectType('Keluar');
                         document.getElementById('shift-recommendation').innerText = 'Langkah 2: Absen Pulang';
                         allDoneBanner.classList.add('hidden');
-                        btnSubmit.disabled = false;
                     } else if (result.suggested_type === 'Selesai') {
                         allDoneBanner.classList.remove('hidden');
                         document.getElementById('shift-recommendation').innerText = 'Presensi Lengkap';
                         btnSubmit.disabled = true;
                         btnSubmitLabel.innerText = "Presensi Hari Ini Sudah Lengkap";
-                        btnSubmit.className = "w-full py-4 px-6 rounded-2xl text-sm font-bold text-slate-500 bg-slate-200 cursor-not-allowed flex items-center justify-center gap-2";
+                        btnSubmit.className = "w-full py-4 px-6 rounded-2xl text-sm font-bold text-slate-400 bg-slate-200 cursor-not-allowed flex items-center justify-center gap-2";
                     } else {
                         selectType('Masuk');
                         document.getElementById('shift-recommendation').innerText = 'Langkah 1: Absen Masuk';
                         allDoneBanner.classList.add('hidden');
-                        btnSubmit.disabled = false;
                     }
                 } else {
-                    document.getElementById('user-greeting-box').classList.add('hidden');
-                    resetAttendanceStatusDisplay();
+                    // KONDISI TIDAK VALID / DITOLAK (MERAH ✕)
+                    isEmployeeValid = false;
+                    validatedIdentifier = '';
+
+                    const dropdown = document.getElementById('employee-dropdown');
+                    if (dropdown) {
+                        dropdown.value = '';
+                    }
+                    document.querySelectorAll('.employee-chip').forEach(c => {
+                        c.classList.remove('bg-black', 'text-white', 'border-black');
+                        c.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+                    });
+
+                    identifierInput.classList.remove('border-emerald-500', 'border-slate-200');
+                    identifierInput.classList.add('border-rose-500');
+
+                    validationPill.className = "text-[11px] font-bold text-rose-600";
+                    validationPill.innerText = "✕ Ditolak";
+
+                    validBox.classList.add('hidden');
+                    invalidBox.classList.remove('hidden');
+                    document.getElementById('user-invalid-message').innerText = `Nama atau ID "${identifier}" tidak terdaftar di sistem. Absensi ditolak!`;
+
+                    // Lock submit button
+                    btnSubmit.disabled = true;
+                    btnSubmitLabel.innerText = "⛔ Identitas Ditolak - Absensi Dikunci";
+                    btnSubmit.className = "w-full py-4 px-6 rounded-2xl text-sm font-bold text-slate-400 bg-slate-200 cursor-not-allowed flex items-center justify-center gap-2";
+
+                    document.getElementById('shift-recommendation').innerText = 'Identitas Ditolak';
                 }
             } catch (e) {
                 console.error("Check status error:", e);
@@ -472,15 +621,37 @@
             }
         }
 
-        function resetAttendanceStatusDisplay() {
+        function resetValidationState() {
+            isEmployeeValid = false;
+            validatedIdentifier = '';
+
+            const dropdown = document.getElementById('employee-dropdown');
+            if (dropdown) {
+                dropdown.value = '';
+            }
+            document.querySelectorAll('.employee-chip').forEach(c => {
+                c.classList.remove('bg-black', 'text-white', 'border-black');
+                c.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+            });
+
+            identifierInput.classList.remove('border-emerald-500', 'border-rose-500');
+            identifierInput.classList.add('border-slate-200');
+
+            validationPill.className = "text-[11px] font-bold text-slate-400";
+            validationPill.innerText = "Verifikasi Wajib";
+
+            document.getElementById('user-valid-box').classList.add('hidden');
+            document.getElementById('user-invalid-box').classList.add('hidden');
+            document.getElementById('all-completed-banner').classList.add('hidden');
             document.getElementById('badge-masuk-done').classList.add('hidden');
             document.getElementById('badge-keluar-done').classList.add('hidden');
             document.getElementById('status-masuk-subtext').innerText = "Saat tiba di kedai";
             document.getElementById('status-keluar-subtext').innerText = "Saat selesai shift";
-            document.getElementById('all-completed-banner').classList.add('hidden');
-            document.getElementById('shift-recommendation').innerText = 'Pilih Aksi';
-            btnSubmit.disabled = false;
-            selectType('Masuk');
+            document.getElementById('shift-recommendation').innerText = 'Pilih Masuk / Keluar';
+
+            btnSubmit.disabled = true;
+            btnSubmitLabel.innerText = "Masukkan Nama / ID Karyawan Dahulu";
+            btnSubmit.className = "w-full py-4 px-6 rounded-2xl shadow-lg text-sm font-extrabold text-white bg-slate-300 cursor-not-allowed transition-all flex items-center justify-center gap-2.5";
         }
 
         // 5. Camera Management
@@ -510,9 +681,14 @@
             startCamera();
         }
 
-        // 6. Form Submit (Instant Snap & AJAX)
+        // 6. Form Submit (Strict Security Check)
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (!isEmployeeValid) {
+                showResultModal(false, "Absensi Ditolak", "Identitas karyawan belum terverifikasi atau tidak terdaftar di sistem kedai.");
+                return;
+            }
             
             if (!stream) {
                 showResultModal(false, "Kamera Belum Aktif", "Pastikan kamera perangkat Anda aktif dan izinkan browser mengakses kamera.");
@@ -529,7 +705,7 @@
             canvas.getContext('2d').drawImage(video, 0, 0);
             const photoData = canvas.toDataURL('image/png');
 
-            const identifier = document.getElementById('identifier').value;
+            const identifier = identifierInput.value;
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             try {

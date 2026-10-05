@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -7,13 +9,13 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/order', [\App\Http\Controllers\OrderController::class, 'index'])->name('order.index');
-Route::post('/order/submit', [\App\Http\Controllers\OrderController::class, 'submit'])->name('order.submit');
-Route::get('/order/track/{invoice}', [\App\Http\Controllers\OrderController::class, 'track'])->name('order.track');
+Route::get('/order', [OrderController::class, 'index'])->name('order.index');
+Route::post('/order/submit', [OrderController::class, 'submit'])->name('order.submit');
+Route::get('/order/track/{invoice}', [OrderController::class, 'track'])->name('order.track');
 
-Route::get('/absen', [\App\Http\Controllers\AbsensiController::class, 'showPublicForm'])->name('absen');
-Route::post('/absen', [\App\Http\Controllers\AbsensiController::class, 'submitPublicAbsen']);
-Route::post('/absen/check', [\App\Http\Controllers\AbsensiController::class, 'checkUser']);
+Route::get('/absen', [AbsensiController::class, 'showPublicForm'])->name('absen');
+Route::post('/absen', [AbsensiController::class, 'submitPublicAbsen'])->name('absen.submit');
+Route::post('/absen/check', [AbsensiController::class, 'checkUser'])->name('absen.check');
 
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
@@ -24,6 +26,7 @@ Route::get('/dashboard', function () {
     } elseif ($role === 'kasir') {
         return redirect()->route('kasir.dashboard');
     }
+
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -40,8 +43,10 @@ Route::get('/impersonate/leave', function () {
         $originalId = session('impersonator_id');
         session()->forget('impersonator_id');
         auth()->loginUsingId($originalId);
+
         return redirect()->route('superadmin.dashboard');
     }
+
     return redirect('/dashboard');
 })->middleware('auth')->name('impersonate.leave');
 
