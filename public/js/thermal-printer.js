@@ -133,7 +133,7 @@ class ThermalPrinter {
         receiptText += "\x1B\x40"; // Init printer
         receiptText += "\x1B\x61\x01"; // Align center
         receiptText += "something, between home and\neverywhare\n";
-        receiptText += "Jl. Sasmitatmaja No.6, Paledang\nKec. Lengkong, Kota Bandung\nJawa Barat 40261\n\n";
+        receiptText += "Jl. Sasmitatmaja No.6, Paledang\nKec. Lengkong, Kota Bandung\n\n";
 
         receiptText += "\x1B\x45\x01"; // Bold ON
         receiptText += "INV-" + data.invoiceNumber + "\n";
@@ -206,21 +206,25 @@ class ThermalPrinter {
         receiptText += "Silakan datang kembali!\n\n";
 
         if (window.kedaiInfo) {
-            if (window.kedaiInfo.wifiSsid || window.kedaiInfo.wifiPassword) {
-                receiptText += "--------------------------------\n";
-                receiptText += "\x1B\x45\x01"; // Bold ON
-                receiptText += "Wi-Fi Area\n";
-                receiptText += "\x1B\x45\x00"; // Bold OFF
-                if (window.kedaiInfo.wifiSsid) receiptText += "" + window.kedaiInfo.wifiSsid + "\n";
-                if (window.kedaiInfo.wifiPassword) receiptText += "Pass: " + window.kedaiInfo.wifiPassword + "\n";
-            }
-            if (window.kedaiInfo.instagram) {
-                receiptText += "--------------------------------\n";
-                receiptText += "\x1B\x45\x01"; // Bold ON
-                receiptText += "Instagram\n";
-                receiptText += "\x1B\x45\x00"; // Bold OFF
-                receiptText += window.kedaiInfo.instagram + "\n";
-            }
+            let wifiSsid = window.kedaiInfo.wifiSsid || 'moreandmore';
+            let wifiPass = window.kedaiInfo.wifiPassword || 'bolehmintasenyumnya?';
+            let igHandle = window.kedaiInfo.instagram || 'morebrewcoffee';
+            if (igHandle.startsWith('@')) igHandle = igHandle.substring(1);
+
+            receiptText += "--------------------------------\n";
+            receiptText += "\x1B\x4D\x01"; // Font B (smaller font, 42 chars/line)
+            receiptText += "\x1B\x45\x01"; // Bold ON
+            receiptText += "   Wi-Fi Area          Instagram   \n";
+            receiptText += "\x1B\x45\x00"; // Bold OFF
+
+            let colLeft1 = wifiSsid;
+            let colRight1 = "@" + igHandle;
+            let pad1 = Math.max(1, 21 - colLeft1.length);
+            receiptText += colLeft1 + " ".repeat(pad1) + colRight1 + "\n";
+
+            let colLeft2 = "pw: " + wifiPass;
+            receiptText += colLeft2 + "\n";
+            receiptText += "\x1B\x4D\x00"; // Font A (normal font)
         }
 
         receiptText += "\n\n";

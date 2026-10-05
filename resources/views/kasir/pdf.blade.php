@@ -50,8 +50,7 @@
             <div class="text-sm">something, between home and everywhare</div>
             <div class="text-sm" style="margin-top: 5px;">
                 Jl. Sasmitatmaja No.6, Paledang<br>
-                Kec. Lengkong, Kota Bandung<br>
-                Jawa Barat 40261
+                Kec. Lengkong, Kota Bandung
             </div>
             
             <div style="margin-top:10px; font-weight:600;">INV-{{ $data['invoiceNumber'] ?? 'XXXX' }}</div>
@@ -94,25 +93,23 @@
             @endif
         </div>
         
-        <div class="center" style="margin-top: 15px;">
+        <div class="center" style="margin-top: 14px;">
             <div class="bold">TERIMA KASIH</div>
-            <div class="text-sm" style="margin-top: 5px;">Silakan datang kembali!</div>
+            <div class="text-sm" style="margin-top: 3px;">Silakan datang kembali!</div>
             @php $kedaiData = \App\Models\Kedai::first(); @endphp
             
-            @if($kedaiData && ($kedaiData->wifi_ssid || $kedaiData->wifi_password))
-            <div style="margin-top: 15px; border-top: 1px solid black; padding-top: 10px;">
-                <div class="bold">Wi-Fi Area</div>
-                @if($kedaiData->wifi_ssid)<div class="text-sm">SSID: {{ $kedaiData->wifi_ssid }}</div>@endif
-                @if($kedaiData->wifi_password)<div class="text-sm">Pass: {{ $kedaiData->wifi_password }}</div>@endif
+            <div style="margin-top: 12px; border-top: 1px solid black; padding-top: 8px; display: flex; justify-content: space-between; align-items: flex-start; text-align: center;">
+                <div style="flex: 1; padding-right: 4px;">
+                    <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Wi-Fi Area</div>
+                    <div style="font-size: 7.5px;">{{ $kedaiData && $kedaiData->wifi_ssid ? $kedaiData->wifi_ssid : 'moreandmore' }}</div>
+                    <div style="font-size: 7px; color: #333;">pass: {{ $kedaiData && $kedaiData->wifi_password ? $kedaiData->wifi_password : 'bolehmintasenyumnya?' }}</div>
+                </div>
+                <div style="width: 1px; background: #000; align-self: stretch; min-height: 28px; margin: 0 4px;"></div>
+                <div style="flex: 1; padding-left: 4px;">
+                    <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Instagram</div>
+                    <div style="font-size: 7.5px;">{{ '@' . ltrim(($kedaiData && $kedaiData->instagram ? $kedaiData->instagram : 'morebrewcoffee'), '@') }}</div>
+                </div>
             </div>
-            @endif
-
-            @if($kedaiData && $kedaiData->instagram)
-            <div style="margin-top: 10px; border-top: 1px solid black; padding-top: 6px;">
-                <div class="bold">Instagram</div>
-                <div class="text-sm">{{ $kedaiData->instagram }}</div>
-            </div>
-            @endif
         </div>
     </div>
 </body>
