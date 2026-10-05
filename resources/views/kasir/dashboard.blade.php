@@ -330,7 +330,12 @@
             orderType: 'dine_in',
             customerName: '',
             customerPhone: '',
-            invoiceNumber: Math.floor(Math.random() * 90000) + 10000,
+            invoiceNumber: (function() {
+                const d = new Date();
+                const ymd = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+                const rand = Math.floor(Math.random() * 9000) + 1000;
+                return ymd + rand;
+            })(),
             
             // New Features: Draft & Checkout
             drafts: [],
@@ -542,7 +547,10 @@
                 this.customerName = '';
                 this.customerPhone = '';
                 this.orderType = 'dine_in';
-                this.invoiceNumber = Math.floor(Math.random() * 90000) + 10000;
+                const d = new Date();
+                const ymd = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+                const rand = Math.floor(Math.random() * 9000) + 1000;
+                this.invoiceNumber = ymd + rand;
                 this.amountPaid = 0;
                 this.discountAmount = 0;
                 this.promoInput = '';
@@ -567,6 +575,7 @@
                 const payload = {
                     invoiceNumber: this.invoiceNumber,
                     customerName: this.customerName,
+                    customerPhone: this.customerPhone,
                     orderType: this.orderType,
                     cart: this.cart,
                     subtotal: this.subtotal,

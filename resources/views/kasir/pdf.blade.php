@@ -69,14 +69,21 @@
                 {{ $line2 }}
             </div>
             
-            <div style="margin-top: 6px; font-weight: bold; font-size: 12px;">INV-{{ $data['invoiceNumber'] ?? 'XXXX' }}</div>
+            <div style="margin-top: 6px; font-weight: bold; font-size: 12px;">INV-{{ preg_replace('/^INV-?/i', '', (string)($data['invoiceNumber'] ?? 'XXXX')) }}</div>
             <div class="text-sm" style="margin-top: 1px;">{{ $data['date'] ?? \Carbon\Carbon::now()->format('d/m/Y H:i') }}</div>
         </div>
         
         <!-- Section 2: Pelanggan & Tipe Order (Satu Baris Hemat Ruang) -->
+        @php
+            $custName = $data['customerName'] ?? '-';
+            $custPhone = !empty($data['customerPhone']) ? ' ('.$data['customerPhone'].')' : '';
+            if (!empty($custPhone) && str_contains($custName, $data['customerPhone'])) {
+                $custPhone = '';
+            }
+        @endphp
         <div class="border-bottom text-sm">
             <div class="row">
-                <span>Plg: <span class="bold">{{ $data['customerName'] ?? '-' }}</span></span>
+                <span>Plg: <span class="bold">{{ $custName }}{{ $custPhone }}</span></span>
                 <span class="bold">{{ ($data['orderType'] ?? '') === 'dine_in' ? 'Dine In' : 'Take Away' }}</span>
             </div>
         </div>

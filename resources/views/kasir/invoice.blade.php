@@ -61,8 +61,8 @@
         <tbody>
             @forelse($invoices as $inv)
             <tr>
-                <td>{{ $inv->created_at->format('H:i') }}</td>
-                <td style="font-family: monospace; font-weight: 600;">{{ $inv->invoice_number }}</td>
+                <td>{{ $inv->created_at->format('d/m/Y H:i') }}</td>
+                <td style="font-family: monospace; font-weight: 600;">#{{ str_starts_with($inv->invoice_number, 'INV-') ? $inv->invoice_number : 'INV-' . $inv->invoice_number }}</td>
                 <td>{{ $inv->customer_name ?? '-' }} {{ $inv->order_type === 'take_away' ? '(Take Away)' : '' }}</td>
                 <td style="font-weight: 600;">Rp {{ number_format($inv->total, 0, ',', '.') }}</td>
                 <td>{{ strtoupper($inv->payment_method) }}</td>
@@ -71,7 +71,7 @@
                     @php
                         $detailData = [
                             "invoice" => $inv->invoice_number,
-                            "time" => $inv->created_at->format("d M Y H:i"),
+                            "time" => $inv->created_at->format("d/m/Y H:i"),
                             "customer" => $inv->customer_name ?? "-",
                             "type" => $inv->order_type === "take_away" ? "Take Away" : "Dine In",
                             "items" => is_string($inv->items) ? json_decode($inv->items, true) : $inv->items,

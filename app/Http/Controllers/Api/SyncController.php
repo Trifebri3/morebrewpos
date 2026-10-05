@@ -105,6 +105,31 @@ class SyncController extends Controller
             ];
         });
 
+        // Data Transaksi Terbaru untuk sinkronisasi riwayat
+        $recentTransactions = Transaksi::latest()->take(50)->get()->map(function ($t) {
+            return [
+                'id' => (string) $t->id,
+                'invoiceNumber' => $t->invoice_number,
+                'customerName' => $t->customer_name ?? 'Pelanggan Walk-In',
+                'orderType' => $t->order_type ?? 'dine_in',
+                'items' => $t->items ?? [],
+                'subtotal' => (double) $t->subtotal,
+                'discount' => (double) $t->discount_amount,
+                'voucherCode' => $t->voucher ? $t->voucher->kode : null,
+                'tax' => (double) $t->tax,
+                'total' => (double) $t->total,
+                'paymentMethod' => $t->payment_method ?? 'cash',
+                'amountPaid' => (double) $t->amount_paid,
+                'change' => max(0, (double) $t->amount_paid - (double) $t->total),
+                'cashierId' => '1',
+                'cashierName' => 'Kasir',
+                'status' => $t->is_refunded ? 'refunded' : 'selesai',
+                'refundReason' => $t->refund_reason,
+                'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
+                'syncStatus' => 'synced',
+            ];
+        });
+
         return response()->json([
             'status' => 'success',
             'server_time' => now()->toIso8601String(),
@@ -126,6 +151,7 @@ class SyncController extends Controller
                 'products' => $products,
                 'tables' => $tables,
                 'vouchers' => $vouchers,
+                'transactions' => $recentTransactions,
             ],
         ]);
     }
@@ -151,7 +177,8 @@ class SyncController extends Controller
                 $inv = $tx['invoiceNumber'] ?? $tx['invoice_number'] ?? null;
                 if (!$inv) continue;
 
-                $existing = Transaksi::where('invoice_number', $inv)->first();
+                $cleanInv = preg_replace('/^INV-?/i', '', (string)$inv);
+                $existing = Transaksi::where('invoice_number', $cleanInv)->orWhere('invoice_number', $inv)->first();
                 if (!$existing) {
                     $voucherId = null;
                     if (!empty($tx['voucherCode'])) {
@@ -170,9 +197,15 @@ class SyncController extends Controller
                         $rawItems = json_decode($rawItems, true) ?? [];
                     }
 
+                    $custName = $tx['customerName'] ?? $tx['customer_name'] ?? 'Pelanggan Walk-In';
+                    $custPhone = !empty($tx['customerPhone']) ? trim($tx['customerPhone']) : (!empty($tx['customer_phone']) ? trim($tx['customer_phone']) : '');
+                    if (!empty($custPhone) && !str_contains($custName, $custPhone)) {
+                        $custName .= ' (' . $custPhone . ')';
+                    }
+
                     Transaksi::create([
-                        'invoice_number' => $inv,
-                        'customer_name'  => $tx['customerName'] ?? $tx['customer_name'] ?? 'Pelanggan Walk-In',
+                        'invoice_number' => $cleanInv,
+                        'customer_name'  => $custName,
                         'order_type'     => $tx['orderType'] ?? $tx['order_type'] ?? 'dine_in',
                         'items'          => $rawItems,
                         'subtotal'       => $tx['subtotal'] ?? 0,

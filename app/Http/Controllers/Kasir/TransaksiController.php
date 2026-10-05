@@ -18,10 +18,16 @@ class TransaksiController extends Controller
     {
         $data = json_decode($request->input('data'), true);
 
+        $cName = $data['customerName'] ?? 'Pelanggan Walk-In';
+        $cPhone = !empty($data['customerPhone']) ? trim($data['customerPhone']) : '';
+        if (!empty($cPhone) && !str_contains($cName, $cPhone)) {
+            $cName .= ' (' . $cPhone . ')';
+        }
+
         // Simpan ke database
         \App\Models\Transaksi::create([
-            'invoice_number' => $data['invoiceNumber'],
-            'customer_name'  => $data['customerName'] ?? null,
+            'invoice_number' => preg_replace('/^INV-?/i', '', (string)($data['invoiceNumber'] ?? (date('ymd') . rand(1000, 9999)))),
+            'customer_name'  => $cName,
             'order_type'     => $data['orderType'] ?? 'dine_in',
             'items'          => $data['cart'] ?? [],
             'subtotal'       => $data['subtotal'] ?? 0,
