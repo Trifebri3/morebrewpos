@@ -108,75 +108,69 @@
             <button onclick="document.getElementById('detailModal').style.display='none'" style="background: none; border: none; font-size: 20px; color: rgba(255,255,255,0.7); cursor: pointer; line-height: 1;">&times;</button>
         </div>
 
-        <!-- Thermal Receipt Container -->
-        <div style="padding: 20px 22px; max-height: 72vh; overflow-y: auto; background: #fdfdfd; font-family: 'Courier New', Courier, monospace; color: black; font-size: 11px;">
+        <!-- Thermal Receipt Container (Hemat Ruang & Kompak) -->
+        <div style="padding: 14px 16px; max-height: 72vh; overflow-y: auto; background: #fdfdfd; font-family: 'Courier New', Courier, monospace; color: black; font-size: 10px;">
             <!-- Header Logo & Alamat 2 Baris -->
-            <div style="text-align: center; margin-bottom: 10px;">
-                <img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 40px; margin-bottom: 4px; object-fit: contain;">
-                <div style="font-size: 10px; line-height: 1.25;">something, between home and<br>everywhare</div>
-                <div style="font-size: 10px; line-height: 1.3; margin-top: 6px;">
+            <div style="text-align: center; margin-bottom: 6px;">
+                <img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 32px; margin-bottom: 2px; object-fit: contain;">
+                <div style="font-size: 8.5px; line-height: 1.2;">something, between home and<br>everywhare</div>
+                <div style="font-size: 8.5px; line-height: 1.2; margin-top: 4px;">
                     Jl. Sasmitatmaja No.6, Paledang<br>
                     Kec. Lengkong, Kota Bandung
                 </div>
-                <div style="margin-top: 10px; font-weight: bold; font-size: 13px;" id="detail-invoice">INV-XXXX</div>
-                <div style="font-size: 10px; color: #333;" id="detail-time">01/01/2026 00:00</div>
+                <div style="margin-top: 6px; font-weight: bold; font-size: 12px;" id="detail-invoice">INV-XXXX</div>
+                <div style="font-size: 8.5px; color: #333;" id="detail-time">01/01/2026 00:00</div>
             </div>
 
             <!-- Dashed Line -->
-            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+            <div style="border-bottom: 1px dashed black; margin: 4px 0;"></div>
 
-            <!-- Pelanggan & Tipe Order -->
-            <div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span>Pelanggan:</span>
-                    <strong id="detail-customer">-</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Tipe:</span>
-                    <strong id="detail-type">Dine In</strong>
-                </div>
+            <!-- Pelanggan & Tipe Order (Satu Baris Hemat Ruang) -->
+            <div style="display: flex; justify-content: space-between; font-size: 8.5px;">
+                <span>Plg: <strong id="detail-customer">-</strong></span>
+                <strong id="detail-type">Dine In</strong>
             </div>
 
             <!-- Dashed Line -->
-            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+            <div style="border-bottom: 1px dashed black; margin: 4px 0;"></div>
 
             <!-- Items List -->
-            <div id="detail-items" style="margin: 4px 0;"></div>
+            <div id="detail-items" style="margin: 2px 0;"></div>
 
             <!-- Dashed Line -->
-            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+            <div style="border-bottom: 1px dashed black; margin: 4px 0;"></div>
 
             <!-- Subtotal, Diskon, Pajak, Total -->
-            <div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <div style="font-size: 8.5px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                     <span>Subtotal:</span>
                     <span id="detail-subtotal">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;" id="detail-discount-row">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;" id="detail-discount-row">
                     <span>Diskon:</span>
                     <span id="detail-discount" style="color: #dc2626;">-Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;" id="detail-tax-row">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;" id="detail-tax-row">
                     <span>Pajak 11%:</span>
                     <span id="detail-tax">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; margin-top: 4px; font-weight: bold; font-size: 11px;">
                     <span>Total:</span>
                     <span id="detail-total">Rp 0</span>
                 </div>
             </div>
 
             <!-- Dashed Line -->
-            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+            <div style="border-bottom: 1px dashed black; margin: 4px 0;"></div>
 
             <!-- Metode Pembayaran & Kembalian -->
-            <div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <div style="font-size: 8.5px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                     <span>Metode:</span>
                     <strong id="detail-method" style="text-transform: uppercase;">CASH</strong>
                 </div>
                 <div id="detail-cash-box">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                         <span>Bayar:</span>
                         <span id="detail-paid">Rp 0</span>
                     </div>
@@ -188,27 +182,27 @@
             </div>
 
             <!-- Dashed Line -->
-            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+            <div style="border-bottom: 1px dashed black; margin: 4px 0;"></div>
 
             <!-- Footer: Terima Kasih, Wi-Fi & Instagram Berdampingan -->
-            <div style="text-align: center; margin-top: 12px;">
-                <div style="font-weight: bold; font-size: 11px;">TERIMA KASIH</div>
-                <div style="font-size: 10px; margin-top: 2px;">Silakan datang kembali!</div>
+            <div style="text-align: center; margin-top: 6px;">
+                <div style="font-weight: bold; font-size: 9.5px;">TERIMA KASIH</div>
+                <div style="font-size: 8.5px; margin-top: 1px;">Silakan datang kembali!</div>
 
                 <!-- Solid Divider Line -->
-                <div style="border-top: 1.2px solid black; margin: 10px 0 8px;"></div>
+                <div style="border-top: 1px solid black; margin: 6px 0 5px;"></div>
 
                 <!-- Wi-Fi & Instagram Side-by-side -->
                 @php $kData = \App\Models\Kedai::first(); @endphp
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; text-align: center; font-size: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; text-align: center; font-size: 7.5px;">
                     <div style="flex: 1; padding-right: 4px;">
-                        <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Wi-Fi Area</div>
+                        <div style="font-weight: bold; font-size: 8px; margin-bottom: 1px;">Wi-Fi Area</div>
                         <div style="font-size: 7.5px;">{{ $kData && $kData->wifi_ssid ? $kData->wifi_ssid : 'moreandmore' }}</div>
                         <div style="font-size: 7px; color: #444;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehmintasenyumnya?' }}</div>
                     </div>
-                    <div style="width: 1px; background: #000; align-self: stretch; min-height: 26px; margin: 0 3px;"></div>
+                    <div style="width: 1px; background: #000; align-self: stretch; min-height: 22px; margin: 0 3px;"></div>
                     <div style="flex: 1; padding-left: 4px;">
-                        <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Instagram</div>
+                        <div style="font-weight: bold; font-size: 8px; margin-bottom: 1px;">Instagram</div>
                         <div style="font-size: 7.5px;">{{ '@' . ltrim(($kData && $kData->instagram ? $kData->instagram : 'morebrewcoffee'), '@') }}</div>
                     </div>
                 </div>
@@ -248,14 +242,14 @@ function showDetail(data) {
             const qty = item.qty || 1;
             const price = item.price || 0;
             const row = document.createElement('div');
-            row.style = 'margin-bottom: 6px;';
+            row.style = 'margin-bottom: 3px;';
             row.innerHTML = `
-                <div style="font-weight: bold; font-size: 10.5px;">${(item.name || 'ITEM').toUpperCase()}</div>
-                <div style="display: flex; justify-content: space-between; font-size: 9.5px;">
+                <div style="font-weight: bold; font-size: 9.5px;">${(item.name || 'ITEM').toUpperCase()}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 8.5px;">
                     <span>${qty} x ${formatRupiah(price)}</span>
                     <span>${formatRupiah(qty * price)}</span>
                 </div>
-                ${item.notes ? `<div style="font-size: 8px; font-style: italic; color: #666;">* ${item.notes}</div>` : ''}
+                ${item.notes ? `<div style="font-size: 7.5px; font-style: italic; color: #666;">* ${item.notes}</div>` : ''}
             `;
             itemsContainer.appendChild(row);
         });

@@ -28,7 +28,7 @@ class SyncController extends Controller
         $kedai = Kedai::first();
         if (!$kedai) {
             $kedai = Kedai::create([
-                'name' => 'Kedai MORE BREW',
+                'name' => 'MOREBREWW',
                 'address' => 'Jl. Sasmitatmaja No.6, Paledang, Kec. Lengkong, Kota Bandung, Jawa Barat 40261',
                 'phone' => '0812-3456-7890',
                 'is_active' => true,
@@ -36,6 +36,13 @@ class SyncController extends Controller
                 'wifi_password' => 'bolehmintasenyumnya?',
                 'instagram' => 'morebrewcoffee',
             ]);
+        } else {
+            // Bersihkan tulisan 'Kedai' dan sesuaikan nama kedai jika masih 'Kedai MORE BREW'
+            $cleanedName = trim(preg_replace('/^kedai\s+/i', '', $kedai->name));
+            if (empty($cleanedName) || strtoupper($cleanedName) === 'MORE BREW' || stripos($kedai->name, 'kedai') !== false) {
+                $kedai->name = 'MOREBREWW';
+                $kedai->save();
+            }
         }
 
         // Data Users (Admin & Kasir)

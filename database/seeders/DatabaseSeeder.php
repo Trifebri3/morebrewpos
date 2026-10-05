@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $kedai = \App\Models\Kedai::create([
-            'name' => 'Kedai MORE BREW',
+            'name' => 'MOREBREWW',
             'is_active' => true
         ]);
 

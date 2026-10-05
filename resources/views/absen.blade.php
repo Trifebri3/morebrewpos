@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Absensi - {{ $kedai->name }}</title>
+    <title>Absensi - {{ preg_replace('/^kedai\s+/i', '', $kedai->name ?? 'MOREBREWW') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -17,7 +17,7 @@
         <div class="bg-stone-900 p-6 text-center text-white flex flex-col items-center border-b border-stone-800">
             <img src="{{ asset('logo.png') }}" alt="Logo" class="h-10 w-auto mb-2 object-contain" onerror="this.style.display='none'">
             <h1 class="text-xl font-bold tracking-tight">Portal Absensi Staf</h1>
-            <p class="text-stone-400 text-xs mt-0.5">{{ $kedai->name ?? 'MoreBrew Coffee' }}</p>
+            <p class="text-stone-400 text-xs mt-0.5">{{ preg_replace('/^kedai\s+/i', '', $kedai->name ?? 'MOREBREWW') }}</p>
         </div>
         
         <div class="p-6">

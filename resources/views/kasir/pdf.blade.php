@@ -5,17 +5,17 @@
     <title>Struk #INV-{{ $data['invoiceNumber'] ?? 'XXXX' }}</title>
     <style>
         @page { margin: 0; size: 58mm auto; }
-        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 0; color: black; font-size: 11px; background: #f0f0f0; display: flex; justify-content: center; }
-        .receipt { width: 58mm; max-width: 100%; margin: 20px auto; padding: 14px 10px; background: white; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body { font-family: 'Courier New', Courier, monospace; margin: 0; padding: 0; color: black; font-size: 10px; background: #f0f0f0; display: flex; justify-content: center; }
+        .receipt { width: 58mm; max-width: 100%; margin: 10px auto; padding: 8px 6px; background: white; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         @media print {
             body { background: white; display: block; }
-            .receipt { margin: 0; padding: 10px; box-shadow: none; width: 100%; }
+            .receipt { margin: 0; padding: 6px 4px; box-shadow: none; width: 100%; }
         }
         .center { text-align: center; }
         .bold { font-weight: bold; }
-        .border-bottom { border-bottom: 1px dashed black; padding-bottom: 8px; margin-bottom: 8px; }
+        .border-bottom { border-bottom: 1px dashed black; padding-bottom: 4px; margin-bottom: 4px; }
         .row { display: flex; justify-content: space-between; }
-        .text-sm { font-size: 9.5px; line-height: 1.3; }
+        .text-sm { font-size: 8.5px; line-height: 1.2; }
     </style>
 </head>
 <body onload="autoPrint()">
@@ -62,34 +62,36 @@
 
         <!-- Section 1: Logo, Slogan, Alamat 2 Baris, Invoice Header -->
         <div class="center border-bottom">
-            <div style="margin-bottom: 5px;"><img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 42px; object-fit: contain;"></div>
+            <div style="margin-bottom: 3px;"><img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 32px; object-fit: contain;"></div>
             <div class="text-sm">something, between home and<br>everywhare</div>
-            <div class="text-sm" style="margin-top: 6px;">
+            <div class="text-sm" style="margin-top: 3px;">
                 {{ $line1 }}<br>
                 {{ $line2 }}
             </div>
             
-            <div style="margin-top: 10px; font-weight: bold; font-size: 13px;">INV-{{ $data['invoiceNumber'] ?? 'XXXX' }}</div>
-            <div class="text-sm" style="margin-top: 2px;">{{ $data['date'] ?? \Carbon\Carbon::now()->format('d/m/Y H:i') }}</div>
+            <div style="margin-top: 6px; font-weight: bold; font-size: 12px;">INV-{{ $data['invoiceNumber'] ?? 'XXXX' }}</div>
+            <div class="text-sm" style="margin-top: 1px;">{{ $data['date'] ?? \Carbon\Carbon::now()->format('d/m/Y H:i') }}</div>
         </div>
         
-        <!-- Section 2: Pelanggan & Tipe Order -->
+        <!-- Section 2: Pelanggan & Tipe Order (Satu Baris Hemat Ruang) -->
         <div class="border-bottom text-sm">
-            <div class="row"><span>Pelanggan:</span> <span class="bold">{{ $data['customerName'] ?? '-' }}</span></div>
-            <div class="row" style="margin-top: 2px;"><span>Tipe:</span> <span class="bold">{{ ($data['orderType'] ?? '') === 'dine_in' ? 'Dine In' : 'Take Away' }}</span></div>
+            <div class="row">
+                <span>Plg: <span class="bold">{{ $data['customerName'] ?? '-' }}</span></span>
+                <span class="bold">{{ ($data['orderType'] ?? '') === 'dine_in' ? 'Dine In' : 'Take Away' }}</span>
+            </div>
         </div>
         
-        <!-- Section 3: Daftar Item (UPPERCASE & Format Kuantitas) -->
+        <!-- Section 3: Daftar Item (Format Ringkas Hemat Ruang) -->
         <div class="border-bottom">
             @if(!empty($data['cart']) && is_array($data['cart']))
                 @foreach($data['cart'] as $item)
-                    <div style="margin-top: 4px; font-weight: bold; font-size: 10.5px;">{{ strtoupper($item['name'] ?? 'ITEM') }}</div>
+                    <div style="margin-top: 2px; font-weight: bold; font-size: 9.5px;">{{ strtoupper($item['name'] ?? 'ITEM') }}</div>
                     <div class="row text-sm">
                         <span>{{ $item['qty'] ?? 1 }} x Rp {{ number_format($item['price'] ?? 0, 0, ',', '.') }}</span>
                         <span>Rp {{ number_format(($item['qty'] ?? 1) * ($item['price'] ?? 0), 0, ',', '.') }}</span>
                     </div>
                     @if(!empty($item['notes']))
-                        <div style="font-size: 8px; font-style: italic; color: #555;">* {{ $item['notes'] }}</div>
+                        <div style="font-size: 7.5px; font-style: italic; color: #555;">* {{ $item['notes'] }}</div>
                     @endif
                 @endforeach
             @endif
@@ -99,43 +101,43 @@
         <div class="border-bottom text-sm">
             <div class="row"><span>Subtotal:</span> <span>Rp {{ number_format($data['subtotal'] ?? 0, 0, ',', '.') }}</span></div>
             @if(($data['discountAmount'] ?? 0) > 0)
-                <div class="row" style="margin-top: 2px;"><span>Diskon:</span> <span>-Rp {{ number_format($data['discountAmount'] ?? 0, 0, ',', '.') }}</span></div>
+                <div class="row" style="margin-top: 1px;"><span>Diskon:</span> <span>-Rp {{ number_format($data['discountAmount'] ?? 0, 0, ',', '.') }}</span></div>
             @endif
             @if(($data['tax'] ?? 0) > 0)
-                <div class="row" style="margin-top: 2px;"><span>Pajak 11%:</span> <span>Rp {{ number_format($data['tax'] ?? 0, 0, ',', '.') }}</span></div>
+                <div class="row" style="margin-top: 1px;"><span>Pajak 11%:</span> <span>Rp {{ number_format($data['tax'] ?? 0, 0, ',', '.') }}</span></div>
             @endif
-            <div class="row bold" style="margin-top: 6px; font-size: 13px;"><span>Total:</span> <span>Rp {{ number_format($data['total'] ?? 0, 0, ',', '.') }}</span></div>
+            <div class="row bold" style="margin-top: 4px; font-size: 12px;"><span>TOTAL:</span> <span>Rp {{ number_format($data['total'] ?? 0, 0, ',', '.') }}</span></div>
         </div>
         
         <!-- Section 5: Metode Pembayaran -->
         <div class="border-bottom text-sm">
             <div class="row"><span>Metode:</span> <span class="bold" style="text-transform: uppercase;">{{ $data['paymentMethod'] ?? 'CASH' }}</span></div>
             @if(strtolower($data['paymentMethod'] ?? 'cash') === 'cash' || strtolower($data['paymentMethod'] ?? 'cash') === 'tunai')
-                <div class="row" style="margin-top: 2px;"><span>Bayar:</span> <span>Rp {{ number_format($data['amountPaid'] ?? 0, 0, ',', '.') }}</span></div>
-                <div class="row" style="margin-top: 2px;"><span>Kembali:</span> <span>Rp {{ number_format(($data['amountPaid'] ?? 0) - ($data['total'] ?? 0), 0, ',', '.') }}</span></div>
+                <div class="row" style="margin-top: 1px;"><span>Bayar:</span> <span>Rp {{ number_format($data['amountPaid'] ?? 0, 0, ',', '.') }}</span></div>
+                <div class="row" style="margin-top: 1px;"><span>Kembali:</span> <span>Rp {{ number_format(($data['amountPaid'] ?? 0) - ($data['total'] ?? 0), 0, ',', '.') }}</span></div>
             @endif
         </div>
         
         <!-- Section 6: Footer Terima Kasih, Wi-Fi & Instagram Berdampingan -->
-        <div class="center" style="margin-top: 12px;">
-            <div class="bold" style="font-size: 11px;">TERIMA KASIH</div>
-            <div class="text-sm" style="margin-top: 2px;">Silakan datang kembali!</div>
+        <div class="center" style="margin-top: 8px;">
+            <div class="bold" style="font-size: 10px;">TERIMA KASIH</div>
+            <div class="text-sm" style="margin-top: 1px;">Silakan datang kembali!</div>
             
-            <div style="margin-top: 10px; border-top: 1.2px solid black; padding-top: 8px; display: flex; justify-content: space-between; align-items: flex-start; text-align: center;">
+            <div style="margin-top: 6px; border-top: 1px solid black; padding-top: 5px; display: flex; justify-content: space-between; align-items: flex-start; text-align: center;">
                 <!-- Kiri: Wi-Fi Area Lebih Kecil -->
                 <div style="flex: 1; padding-right: 4px;">
-                    <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Wi-Fi Area</div>
-                    <div style="font-size: 7.5px;">{{ $kData && $kData->wifi_ssid ? $kData->wifi_ssid : 'moreandmore' }}</div>
-                    <div style="font-size: 7px; color: #333;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehmintasenyumnya?' }}</div>
+                    <div style="font-weight: bold; font-size: 8px; margin-bottom: 1px;">Wi-Fi Area</div>
+                    <div style="font-size: 7px;">{{ $kData && $kData->wifi_ssid ? $kData->wifi_ssid : 'moreandmore' }}</div>
+                    <div style="font-size: 6.5px; color: #333;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehmintasenyumnya?' }}</div>
                 </div>
                 
                 <!-- Divider Vertikal Halus -->
-                <div style="width: 1px; background: #000; align-self: stretch; min-height: 28px; margin: 0 4px;"></div>
+                <div style="width: 1px; background: #000; align-self: stretch; min-height: 24px; margin: 0 4px;"></div>
                 
                 <!-- Kanan: Instagram Lebih Kecil -->
                 <div style="flex: 1; padding-left: 4px;">
-                    <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Instagram</div>
-                    <div style="font-size: 7.5px;">{{ '@' . ltrim(($kData && $kData->instagram ? $kData->instagram : 'morebrewcoffee'), '@') }}</div>
+                    <div style="font-weight: bold; font-size: 8px; margin-bottom: 1px;">Instagram</div>
+                    <div style="font-size: 7px;">{{ '@' . ltrim(($kData && $kData->instagram ? $kData->instagram : 'morebrewcoffee'), '@') }}</div>
                 </div>
             </div>
         </div>
