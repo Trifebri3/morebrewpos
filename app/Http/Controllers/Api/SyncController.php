@@ -92,13 +92,14 @@ class SyncController extends Controller
 
         // Data Voucher
         $vouchers = Voucher::where('status', true)->get()->map(function ($v) {
+            $isPercent = $v->tipe_diskon === 'persen' || stripos($v->tipe_diskon, 'persen') !== false;
             return [
                 'id' => (string) $v->id,
                 'code' => $v->kode,
-                'type' => $v->tipe_diskon === 'persen' ? 'persen' : 'nominal',
+                'type' => $isPercent ? 'persen' : 'nominal',
                 'value' => (double) $v->nilai_diskon,
-                'minOrder' => (double) $v->minimal_belanja,
-                'maxDiscount' => (double) $v->nilai_diskon,
+                'minOrder' => (double) ($v->minimal_belanja ?? 0),
+                'maxDiscount' => 0.0,
                 'quota' => (int) ($v->kuota ?? 100),
                 'used' => (int) ($v->terpakai ?? 0),
                 'isActive' => (bool) $v->status,
@@ -140,6 +141,7 @@ class SyncController extends Controller
                     'address' => $kedai->address ?? 'Jl. Sasmitatmaja No.6, Paledang, Kec. Lengkong, Kota Bandung, Jawa Barat 40261',
                     'phone' => $kedai->phone ?? '0812-3456-7890',
                     'taxPercentage' => 11.0,
+                    'dailyBudget' => (double) ($kedai->budget_harian ?? 1000000.0),
                     'receiptHeader' => 'something, between home and everywhere',
                     'receiptFooter' => 'Silakan datang kembali!',
                     'wifiSsid' => $kedai->wifi_ssid ?? 'moreandmore',
