@@ -281,15 +281,19 @@
 </div>
 
 <script>
-    // Live Digital Clock
+    // Live Digital Clock (Asia/Jakarta / WIB)
     function updateClock() {
         const d = new Date();
-        const hrs = String(d.getHours()).padStart(2, '0');
-        const min = String(d.getMinutes()).padStart(2, '0');
-        const sec = String(d.getSeconds()).padStart(2, '0');
+        const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Jakarta',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
         const clockEl = document.getElementById('live-time');
         if (clockEl) {
-            clockEl.innerText = `${hrs}:${min}:${sec} WIB`;
+            clockEl.innerText = `${timeFormatter.format(d)} WIB`;
         }
     }
     setInterval(updateClock, 1000);

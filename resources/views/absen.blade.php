@@ -294,23 +294,29 @@
     </div>
 
     <script>
-        // 1. Live Digital Clock & Auto Midnight Reset
-        let lastDayKey = new Date().toDateString();
+        // 1. Live Digital Clock & Auto Midnight Reset (Asia/Jakarta / WIB)
+        const dayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' });
+        let lastDayKey = dayFormatter.format(new Date());
 
         function updateLiveClock() {
             const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('live-clock').innerText = `${h}:${m}:${s} WIB`;
+            const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Jakarta',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('live-clock').innerText = `${timeFormatter.format(now)} WIB`;
 
-            // Jika berganti hari / tengah malam (00:00:00), refresh tanggal dan reset status
-            if (now.toDateString() !== lastDayKey) {
-                lastDayKey = now.toDateString();
+            // Jika berganti hari di zona Asia/Jakarta (00:00:00 WIB), refresh tanggal dan reset status
+            const currentDay = dayFormatter.format(now);
+            if (currentDay !== lastDayKey) {
+                lastDayKey = currentDay;
                 const dateElem = document.getElementById('live-date');
                 if (dateElem) {
-                    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-                    dateElem.innerText = now.toLocaleDateString('id-ID', options);
+                    const options = { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                    dateElem.innerText = new Intl.DateTimeFormat('id-ID', options).format(now);
                 }
                 resetValidationState();
                 identifierInput.value = '';
