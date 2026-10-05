@@ -9,9 +9,14 @@ use App\Http\Controllers\Kasir\SesiController;
 use App\Http\Controllers\Kasir\ShiftController;
 use App\Http\Controllers\Kasir\TransaksiController;
 use App\Http\Controllers\Kasir\VoucherController;
+use App\Http\Controllers\Admin\KedaiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('kasir.dashboard');
+
+// Pengaturan Kedai & Pajak (Akses Langsung Kasir & POS)
+Route::get('/pengaturan', [KedaiController::class, 'pengaturanKasir'])->name('kasir.pengaturan');
+Route::post('/pengaturan', [KedaiController::class, 'updatePengaturan'])->name('kasir.pengaturan.update');
 
 // Belanja Harian / Pengeluaran
 Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('kasir.pengeluaran');

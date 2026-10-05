@@ -206,7 +206,7 @@
             <div class="summary-row" style="align-items: center;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" x-model="useTax" style="width: 16px; height: 16px; accent-color: var(--text-main);">
-                    <span>Pajak (<span x-text="taxPercentage"></span>%)</span>
+                    <span><span x-text="taxName"></span> (<span x-text="taxPercentage"></span>%)</span>
                 </label>
                 <span style="font-weight: 500; color: var(--text-main);" x-text="formatMoney(tax)"></span>
             </div>
@@ -509,6 +509,7 @@
             // Tax & Kedai Config
             taxPercentage: {{ isset($data['kedai']) && $data['kedai']->tax_percentage ? (float)$data['kedai']->tax_percentage : 11 }},
             useTax: {{ isset($data['kedai']) && $data['kedai']->is_tax_enabled ? 'true' : 'false' }},
+            taxName: '{{ isset($data['kedai']) && $data['kedai']->tax_name ? addslashes($data['kedai']->tax_name) : "PB1" }}',
             promoInput: '',
             discountAmount: 0,
             appliedVoucherId: null,

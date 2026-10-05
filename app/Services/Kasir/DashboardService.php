@@ -42,6 +42,9 @@ class DashboardService
                     ['label' => 'Laporan Pengeluaran', 'url' => route('kasir.laporan.pengeluaran'), 'active' => request()->routeIs('kasir.laporan.pengeluaran')],
                     ['label' => 'Laporan Shift', 'url' => route('kasir.laporan.shift'), 'active' => request()->routeIs('kasir.laporan.shift')],
                 ],
+                'Pengaturan' => [
+                    ['label' => 'Pengaturan Kedai & Pajak', 'url' => route('kasir.pengaturan'), 'active' => request()->routeIs('kasir.pengaturan*')],
+                ],
             ],
             'products' => $products,
             'vouchers' => \App\Models\Voucher::where('status', true)->get(),

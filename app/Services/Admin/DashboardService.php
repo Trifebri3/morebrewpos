@@ -31,9 +31,9 @@ class DashboardService
                     ['label' => 'Refund', 'url' => route('admin.penjualan.refund'), 'active' => request()->routeIs('admin.penjualan.refund')],
                     ['label' => 'Riwayat', 'url' => route('admin.penjualan.riwayat'), 'active' => request()->routeIs('admin.penjualan.riwayat')],
                 ],
-                'Kedai' => [
-                    ['label' => 'Meja', 'url' => route('admin.kedai.meja.index'), 'active' => request()->routeIs('admin.kedai.meja.*')],
-                    ['label' => 'Pengaturan Kedai', 'url' => route('admin.kedai.pengaturan'), 'active' => request()->routeIs('admin.kedai.pengaturan')],
+                'Kedai & Pajak' => [
+                    ['label' => 'Pengaturan Kedai & Pajak', 'url' => route('admin.kedai.pengaturan'), 'active' => request()->routeIs('admin.kedai.pengaturan*')],
+                    ['label' => 'Meja Restoran', 'url' => route('admin.kedai.meja.index'), 'active' => request()->routeIs('admin.kedai.meja.*')],
                 ],
                 'Staff' => [
                     ['label' => 'Karyawan & Staff', 'url' => route('admin.staff.karyawan.index'), 'active' => request()->routeIs('admin.staff.karyawan.*')],

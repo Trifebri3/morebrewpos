@@ -31,7 +31,7 @@ class PengaturanController extends Controller
 
     public function pajak()
     {
-        return view('superadmin.placeholder', ['data' => $this->getViewData('Pengaturan Pajak & Service'), 'title' => 'Pengaturan Pajak & Service']);
+        return redirect()->route('admin.kedai.pengaturan');
     }
 
     public function qr()
