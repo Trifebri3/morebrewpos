@@ -96,82 +96,150 @@
     </table>
 </div>
 
-<!-- Modal Detail Transaksi -->
-<div id="detailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; width: 500px; max-width: 90%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
-        <div style="padding: 16px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 18px;">Detail Transaksi</h3>
-            <button onclick="document.getElementById('detailModal').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+<!-- Modal Detail Transaksi (Thermal Receipt 58mm Sesuai Aplikasi) -->
+<div id="detailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; width: 380px; max-width: 95%; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.25);">
+        <!-- Top Modal Header -->
+        <div style="padding: 14px 20px; background: #212121; color: white; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span style="font-weight: 700; font-size: 14px;">Struk Transaksi (58mm)</span>
+            </div>
+            <button onclick="document.getElementById('detailModal').style.display='none'" style="background: none; border: none; font-size: 20px; color: rgba(255,255,255,0.7); cursor: pointer; line-height: 1;">&times;</button>
         </div>
-        <div style="padding: 24px; max-height: 70vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                <div>
-                    <div style="font-size: 13px; color: #64748b;">No. Invoice</div>
-                    <div style="font-weight: 600; font-family: monospace;" id="detail-invoice"></div>
+
+        <!-- Thermal Receipt Container -->
+        <div style="padding: 20px 22px; max-height: 72vh; overflow-y: auto; background: #fdfdfd; font-family: 'Courier New', Courier, monospace; color: black; font-size: 11px;">
+            <!-- Header Logo & Alamat 2 Baris -->
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 40px; margin-bottom: 4px; object-fit: contain;">
+                <div style="font-size: 10px; line-height: 1.25;">something, between home and<br>everywhare</div>
+                <div style="font-size: 10px; line-height: 1.3; margin-top: 6px;">
+                    Jl. Sasmitatmaja No.6, Paledang<br>
+                    Kec. Lengkong, Kota Bandung
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 13px; color: #64748b;">Waktu</div>
-                    <div style="font-weight: 500;" id="detail-time"></div>
-                </div>
+                <div style="margin-top: 10px; font-weight: bold; font-size: 13px;" id="detail-invoice">INV-XXXX</div>
+                <div style="font-size: 10px; color: #333;" id="detail-time">01/01/2026 00:00</div>
             </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px dashed #cbd5e1;">
-                <div>
-                    <div style="font-size: 13px; color: #64748b;">Pelanggan</div>
-                    <div style="font-weight: 500;" id="detail-customer"></div>
+
+            <!-- Dashed Line -->
+            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+
+            <!-- Pelanggan & Tipe Order -->
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                    <span>Pelanggan:</span>
+                    <strong id="detail-customer">-</strong>
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 13px; color: #64748b;">Tipe Pesanan</div>
-                    <div style="font-weight: 500;" id="detail-type"></div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Tipe:</span>
+                    <strong id="detail-type">Dine In</strong>
                 </div>
             </div>
 
-            <div style="font-weight: 600; margin-bottom: 12px;">Item Pesanan</div>
-            <div id="detail-items" style="margin-bottom: 24px;"></div>
+            <!-- Dashed Line -->
+            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
 
-            <div style="border-top: 1px dashed #cbd5e1; padding-top: 16px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #64748b;">Subtotal</span>
-                    <span id="detail-subtotal"></span>
+            <!-- Items List -->
+            <div id="detail-items" style="margin: 4px 0;"></div>
+
+            <!-- Dashed Line -->
+            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+
+            <!-- Subtotal, Diskon, Pajak, Total -->
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                    <span>Subtotal:</span>
+                    <span id="detail-subtotal">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #dc2626;" id="detail-discount-row">
-                    <span>Diskon</span>
-                    <span id="detail-discount"></span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;" id="detail-discount-row">
+                    <span>Diskon:</span>
+                    <span id="detail-discount" style="color: #dc2626;">-Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;" id="detail-tax-row">
-                    <span style="color: #64748b;">Pajak (11%)</span>
-                    <span id="detail-tax"></span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;" id="detail-tax-row">
+                    <span>Pajak 11%:</span>
+                    <span id="detail-tax">Rp 0</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 16px; font-weight: 700; font-size: 16px;">
-                    <span>Total Tagihan</span>
-                    <span id="detail-total"></span>
+                <div style="display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; font-size: 13px;">
+                    <span>Total:</span>
+                    <span id="detail-total">Rp 0</span>
                 </div>
-                
-                <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="color: #64748b;">Metode Pembayaran</span>
-                        <span style="font-weight: 600;" id="detail-method"></span>
+            </div>
+
+            <!-- Dashed Line -->
+            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+
+            <!-- Metode Pembayaran & Kembalian -->
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                    <span>Metode:</span>
+                    <strong id="detail-method" style="text-transform: uppercase;">CASH</strong>
+                </div>
+                <div id="detail-cash-box">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                        <span>Bayar:</span>
+                        <span id="detail-paid">Rp 0</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="color: #64748b;">Jumlah Dibayar</span>
-                        <span id="detail-paid"></span>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Kembali:</span>
+                        <span id="detail-change">Rp 0</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Dashed Line -->
+            <div style="border-bottom: 1px dashed black; margin: 8px 0;"></div>
+
+            <!-- Footer: Terima Kasih, Wi-Fi & Instagram Berdampingan -->
+            <div style="text-align: center; margin-top: 12px;">
+                <div style="font-weight: bold; font-size: 11px;">TERIMA KASIH</div>
+                <div style="font-size: 10px; margin-top: 2px;">Silakan datang kembali!</div>
+
+                <!-- Solid Divider Line -->
+                <div style="border-top: 1.2px solid black; margin: 10px 0 8px;"></div>
+
+                <!-- Wi-Fi & Instagram Side-by-side -->
+                @php $kData = \App\Models\Kedai::first(); @endphp
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; text-align: center; font-size: 8px;">
+                    <div style="flex: 1; padding-right: 4px;">
+                        <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Wi-Fi Area</div>
+                        <div style="font-size: 7.5px;">{{ $kData && $kData->wifi_ssid ? $kData->wifi_ssid : 'moreandmore' }}</div>
+                        <div style="font-size: 7px; color: #444;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehmintasenyumnya?' }}</div>
+                    </div>
+                    <div style="width: 1px; background: #000; align-self: stretch; min-height: 26px; margin: 0 3px;"></div>
+                    <div style="flex: 1; padding-left: 4px;">
+                        <div style="font-weight: bold; font-size: 8.5px; margin-bottom: 2px;">Instagram</div>
+                        <div style="font-size: 7.5px;">{{ '@' . ltrim(($kData && $kData->instagram ? $kData->instagram : 'morebrewcoffee'), '@') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Bottom Actions -->
+        <div style="padding: 12px 18px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="document.getElementById('detailModal').style.display='none'" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Tutup</button>
+            <button id="btn-print-from-modal" style="background: #212121; border: none; color: white; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Cetak Struk Thermal
+            </button>
         </div>
     </div>
 </div>
 
 <script>
 function formatRupiah(angka) {
-    return 'Rp ' + parseInt(angka).toLocaleString('id-ID');
+    return 'Rp ' + parseInt(angka || 0).toLocaleString('id-ID');
 }
 
+let activeDetailData = null;
+
 function showDetail(data) {
-    document.getElementById('detail-invoice').innerText = data.invoice;
-    document.getElementById('detail-time').innerText = data.time;
-    document.getElementById('detail-customer').innerText = data.customer;
-    document.getElementById('detail-type').innerText = data.type;
+    activeDetailData = data;
+    
+    document.getElementById('detail-invoice').innerText = data.invoice ? (data.invoice.startsWith('INV-') ? data.invoice : 'INV-' + data.invoice) : 'INV-XXXX';
+    document.getElementById('detail-time').innerText = data.time || '-';
+    document.getElementById('detail-customer').innerText = data.customer || '-';
+    document.getElementById('detail-type').innerText = data.type || 'Dine In';
     
     const itemsContainer = document.getElementById('detail-items');
     itemsContainer.innerHTML = '';
@@ -180,13 +248,14 @@ function showDetail(data) {
             const qty = item.qty || 1;
             const price = item.price || 0;
             const row = document.createElement('div');
-            row.style = 'display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;';
+            row.style = 'margin-bottom: 6px;';
             row.innerHTML = `
-                <div>
-                    <div>${item.name || 'Produk'}</div>
-                    <div style="font-size: 12px; color: #64748b;">${qty} x ${formatRupiah(price)}</div>
+                <div style="font-weight: bold; font-size: 10.5px;">${(item.name || 'ITEM').toUpperCase()}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 9.5px;">
+                    <span>${qty} x ${formatRupiah(price)}</span>
+                    <span>${formatRupiah(qty * price)}</span>
                 </div>
-                <div style="font-weight: 500;">${formatRupiah(qty * price)}</div>
+                ${item.notes ? `<div style="font-size: 8px; font-style: italic; color: #666;">* ${item.notes}</div>` : ''}
             `;
             itemsContainer.appendChild(row);
         });
@@ -209,11 +278,27 @@ function showDetail(data) {
     }
 
     document.getElementById('detail-total').innerText = formatRupiah(data.total);
-    document.getElementById('detail-method').innerText = data.method;
-    document.getElementById('detail-paid').innerText = formatRupiah(data.paid);
+    document.getElementById('detail-method').innerText = (data.method || 'CASH').toUpperCase();
+    
+    const isCash = (data.method || '').toLowerCase() === 'cash' || (data.method || '').toLowerCase() === 'tunai';
+    const cashBox = document.getElementById('detail-cash-box');
+    if (isCash) {
+        cashBox.style.display = 'block';
+        document.getElementById('detail-paid').innerText = formatRupiah(data.paid);
+        const change = (parseFloat(data.paid) || 0) - (parseFloat(data.total) || 0);
+        document.getElementById('detail-change').innerText = formatRupiah(Math.max(0, change));
+    } else {
+        cashBox.style.display = 'none';
+    }
 
     document.getElementById('detailModal').style.display = 'flex';
 }
+
+document.getElementById('btn-print-from-modal').addEventListener('click', function () {
+    if (activeDetailData) {
+        cetakUlang(null, activeDetailData);
+    }
+});
 
 function cetakUlang(id, data) {
     if (window.thermalPrinter && window.thermalPrinter.isConnected() && data) {
@@ -222,8 +307,6 @@ function cetakUlang(id, data) {
         btn.innerText = "Mencetak...";
         btn.disabled = true;
 
-        // Note: the payload expects cart, orderType, customerName, etc.
-        // We remap the detailData properties slightly to match checkout format.
         const printPayload = {
             invoiceNumber: data.invoice,
             customerName: data.customer,
@@ -232,7 +315,9 @@ function cetakUlang(id, data) {
             subtotal: parseFloat(data.subtotal),
             discountAmount: parseFloat(data.discount),
             tax: parseFloat(data.tax),
-            total: parseFloat(data.total)
+            total: parseFloat(data.total),
+            paymentMethod: data.method,
+            amountPaid: parseFloat(data.paid)
         };
 
         window.thermalPrinter.printReceipt(printPayload)
@@ -250,38 +335,64 @@ function cetakUlang(id, data) {
     }
 
     const btn = event.target;
-    const originalText = btn.innerText;
-    btn.innerText = "Loading...";
-    btn.disabled = true;
+    const originalText = btn ? btn.innerText : 'Cetak';
+    if (btn) {
+        btn.innerText = "Loading...";
+        btn.disabled = true;
+    }
 
-    fetch(`/kasir/cetak-ulang/${id}`)
-        .then(res => res.text())
-        .then(html => {
-            const oldIframe = document.getElementById('print-iframe');
-            if (oldIframe) oldIframe.remove();
-            
-            const iframe = document.createElement('iframe');
-            iframe.id = 'print-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-            
-            iframe.contentDocument.open();
-            iframe.contentDocument.write(html);
-            iframe.contentDocument.close();
-            
-            setTimeout(() => {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
+    const targetUrl = id ? `/kasir/cetak-ulang/${id}` : `{{ route('kasir.cetak_struk') }}`;
+
+    fetch(targetUrl, {
+        method: id ? 'GET' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: id ? null : JSON.stringify({
+            invoiceNumber: data.invoice,
+            customerName: data.customer,
+            orderType: data.type === 'Take Away' ? 'take_away' : 'dine_in',
+            cart: data.items,
+            subtotal: parseFloat(data.subtotal),
+            discountAmount: parseFloat(data.discount),
+            tax: parseFloat(data.tax),
+            total: parseFloat(data.total),
+            paymentMethod: data.method,
+            amountPaid: parseFloat(data.paid)
+        })
+    })
+    .then(res => res.text())
+    .then(html => {
+        const oldIframe = document.getElementById('print-iframe');
+        if (oldIframe) oldIframe.remove();
+        
+        const iframe = document.createElement('iframe');
+        iframe.id = 'print-iframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
+        
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            if (btn) {
                 btn.innerText = originalText;
                 btn.disabled = false;
-            }, 500);
-        })
-        .catch(err => {
-            console.error(err);
+            }
+        }, 500);
+    })
+    .catch(err => {
+        console.error(err);
+        if (btn) {
             btn.innerText = originalText;
             btn.disabled = false;
-            alert("Gagal mencetak struk.");
-        });
+        }
+        alert("Gagal mencetak struk.");
+    });
 }
 </script>
 @endsection

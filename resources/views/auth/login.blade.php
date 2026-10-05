@@ -178,8 +178,15 @@
         
         <div class="login-form-wrapper">
             <div class="login-header">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <img src="{{ asset('logo.png') }}" alt="Logo" style="height: 42px; width: auto; object-fit: contain;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 16px; color: #0f172a; line-height: 1.2;">MoreBrew POS</div>
+                        <div style="font-size: 11px; color: #64748b; font-weight: 500;">Specialty Coffee & Brew Lab</div>
+                    </div>
+                </div>
                 <h2>Selamat Datang</h2>
-                <p>Silakan masuk ke akun Anda untuk melanjutkan</p>
+                <p>Silakan masuk ke akun Anda untuk melanjutkan operasional kasir</p>
             </div>
 
             <!-- Session Status -->

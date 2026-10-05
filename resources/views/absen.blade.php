@@ -14,9 +14,10 @@
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="bg-indigo-600 p-6 text-center text-white">
-            <h1 class="text-2xl font-bold">Portal Absensi</h1>
-            <p class="text-indigo-200 mt-1">{{ $kedai->name }}</p>
+        <div class="bg-stone-900 p-6 text-center text-white flex flex-col items-center border-b border-stone-800">
+            <img src="{{ asset('logo.png') }}" alt="Logo" class="h-10 w-auto mb-2 object-contain" onerror="this.style.display='none'">
+            <h1 class="text-xl font-bold tracking-tight">Portal Absensi Staf</h1>
+            <p class="text-stone-400 text-xs mt-0.5">{{ $kedai->name ?? 'MoreBrew Coffee' }}</p>
         </div>
         
         <div class="p-6">
@@ -35,7 +36,7 @@
             <form id="absen-form" class="space-y-5 hidden">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ID Karyawan / Email</label>
-                    <input type="text" id="identifier" class="w-full border-gray-300 rounded-lg shadow-sm p-3 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="Masukkan ID Anda..." required>
+                    <input type="text" id="identifier" class="w-full border-gray-300 rounded-lg shadow-sm p-3 border focus:ring-stone-900 focus:border-stone-900" placeholder="Masukkan ID Anda..." required>
                     <p id="user-name-display" class="text-sm font-semibold mt-2 hidden"></p>
                 </div>
 
@@ -44,13 +45,13 @@
                     <div class="grid grid-cols-2 gap-3">
                         <label class="relative flex items-center justify-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 bg-white">
                             <input type="radio" name="type" value="Masuk" class="sr-only peer" required>
-                            <span class="text-sm font-medium text-gray-900 peer-checked:text-indigo-600">Masuk</span>
-                            <div class="absolute inset-0 border-2 rounded-lg pointer-events-none peer-checked:border-indigo-600"></div>
+                            <span class="text-sm font-medium text-gray-900 peer-checked:text-stone-900 font-bold">Masuk</span>
+                            <div class="absolute inset-0 border-2 rounded-lg pointer-events-none peer-checked:border-stone-900"></div>
                         </label>
                         <label class="relative flex items-center justify-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 bg-white">
                             <input type="radio" name="type" value="Keluar" class="sr-only peer">
-                            <span class="text-sm font-medium text-gray-900 peer-checked:text-indigo-600">Keluar</span>
-                            <div class="absolute inset-0 border-2 rounded-lg pointer-events-none peer-checked:border-indigo-600"></div>
+                            <span class="text-sm font-medium text-gray-900 peer-checked:text-stone-900 font-bold">Keluar</span>
+                            <div class="absolute inset-0 border-2 rounded-lg pointer-events-none peer-checked:border-stone-900"></div>
                         </label>
                     </div>
                 </div>
@@ -65,7 +66,7 @@
                     </div>
                 </div>
 
-                <button type="submit" id="btn-submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:opacity-50">
+                <button type="submit" id="btn-submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-stone-900 hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-900 transition disabled:opacity-50">
                     Ambil Foto & Absen
                 </button>
             </form>

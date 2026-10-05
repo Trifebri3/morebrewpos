@@ -54,22 +54,34 @@ class KedaiController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:50',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'radius_meter' => 'nullable|integer|min:5',
             'wifi_ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
             'instagram' => 'nullable|string|max:255',
             'is_active' => 'boolean',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
         ]);
 
         $kedai->update([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? null,
             'phone' => $validated['phone'] ?? null,
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            'radius_meter' => $validated['radius_meter'] ?? 50,
             'wifi_ssid' => $validated['wifi_ssid'] ?? null,
             'wifi_password' => $validated['wifi_password'] ?? null,
             'instagram' => $validated['instagram'] ?? null,
             'is_active' => $request->has('is_active'),
         ]);
+
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $file->move(public_path(), 'logo.png');
+        }
 
         return redirect()->route('superadmin.kedai.index')->with('success', 'Kedai updated successfully.');
     }
