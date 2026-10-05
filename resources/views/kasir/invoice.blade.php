@@ -151,7 +151,7 @@
                     <span id="detail-discount" style="color: #dc2626;">-Rp 0</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 2px;" id="detail-tax-row">
-                    <span>Pajak 11%:</span>
+                    <span id="detail-tax-label">Pajak (PB1):</span>
                     <span id="detail-tax">Rp 0</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 4px; font-weight: bold; font-size: 11px;">
@@ -266,6 +266,8 @@ function showDetail(data) {
 
     if (parseFloat(data.tax) > 0) {
         document.getElementById('detail-tax-row').style.display = 'flex';
+        const taxName = data.taxName || 'PB1 (Pajak)';
+        document.getElementById('detail-tax-label').innerText = taxName + ':';
         document.getElementById('detail-tax').innerText = formatRupiah(data.tax);
     } else {
         document.getElementById('detail-tax-row').style.display = 'none';
@@ -309,6 +311,7 @@ function cetakUlang(id, data) {
             subtotal: parseFloat(data.subtotal),
             discountAmount: parseFloat(data.discount),
             tax: parseFloat(data.tax),
+            taxName: data.taxName,
             total: parseFloat(data.total),
             paymentMethod: data.method,
             amountPaid: parseFloat(data.paid)

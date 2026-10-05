@@ -132,8 +132,12 @@ class ThermalPrinter {
 
         receiptText += "\x1B\x40"; // Init printer
         receiptText += "\x1B\x61\x01"; // Align center
-        receiptText += "something, between home and\neverywhare\n";
-        receiptText += "Jl. Sasmitatmaja No.6, Paledang\nKec. Lengkong, Kota Bandung\n\n";
+        let header1 = (window.kedaiInfo && window.kedaiInfo.receiptHeader) ? window.kedaiInfo.receiptHeader : "something, between home and\neverywhere\n";
+        if (!header1.endsWith("\n")) header1 += "\n";
+        receiptText += header1;
+        let addr = (window.kedaiInfo && window.kedaiInfo.address) ? window.kedaiInfo.address : "Jl. Sasmitatmaja No.6, Paledang\nKec. Lengkong, Kota Bandung\n\n";
+        if (!addr.endsWith("\n\n")) addr += "\n\n";
+        receiptText += addr;
 
         receiptText += "\x1B\x45\x01"; // Bold ON
         receiptText += "INV-" + data.invoiceNumber + "\n";
@@ -174,8 +178,9 @@ class ThermalPrinter {
         }
 
         if ((data.tax || 0) > 0) {
+            let taxLabel = (data.taxName || (window.kedaiInfo && window.kedaiInfo.taxName) || 'PB1') + ":";
             let taxStr = formatRp(data.tax);
-            receiptText += "Pajak 11%:" + ' '.repeat(Math.max(1, 32 - 10 - taxStr.length)) + taxStr + "\n";
+            receiptText += taxLabel + ' '.repeat(Math.max(1, 32 - taxLabel.length - taxStr.length)) + taxStr + "\n";
         }
 
         receiptText += "\x1B\x45\x01"; // Bold ON

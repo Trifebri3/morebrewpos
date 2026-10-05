@@ -949,6 +949,7 @@
                     discountAmount: this.discountAmount,
                     voucherId: this.appliedVoucherId,
                     tax: this.tax,
+                    taxName: this.taxName,
                     total: this.total,
                     paymentMethod: this.paymentMethod,
                     amountPaid: this.amountPaid

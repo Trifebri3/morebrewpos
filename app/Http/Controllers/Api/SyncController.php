@@ -209,6 +209,26 @@ class SyncController extends Controller
         $kedai = Kedai::first();
         $kedaiId = $kedai ? $kedai->id : null;
 
+        // 0. Update Pengaturan Kedai & Pajak jika dikirim dari mobile POS
+        if ($request->has('kedai') && is_array($request->input('kedai'))) {
+            $kData = $request->input('kedai');
+            if ($kedai) {
+                if (isset($kData['name']) && !empty($kData['name'])) $kedai->name = $kData['name'];
+                if (isset($kData['address'])) $kedai->address = $kData['address'];
+                if (isset($kData['phone'])) $kedai->phone = $kData['phone'];
+                if (isset($kData['taxPercentage'])) $kedai->tax_percentage = (float)$kData['taxPercentage'];
+                if (isset($kData['isTaxEnabled'])) $kedai->is_tax_enabled = (bool)$kData['isTaxEnabled'];
+                if (isset($kData['taxName'])) $kedai->tax_name = $kData['taxName'];
+                if (isset($kData['dailyBudget'])) $kedai->budget_harian = (float)$kData['dailyBudget'];
+                if (isset($kData['receiptHeader'])) $kedai->receipt_header = $kData['receiptHeader'];
+                if (isset($kData['receiptFooter'])) $kedai->receipt_footer = $kData['receiptFooter'];
+                if (isset($kData['wifiSsid'])) $kedai->wifi_ssid = $kData['wifiSsid'];
+                if (isset($kData['wifiPassword'])) $kedai->wifi_password = $kData['wifiPassword'];
+                if (isset($kData['instagram'])) $kedai->instagram = $kData['instagram'];
+                $kedai->save();
+            }
+        }
+
         $syncedTransactions = 0;
         $syncedExpenses = 0;
         $syncedAttendances = 0;
@@ -577,6 +597,142 @@ class SyncController extends Controller
                 'change'        => max(0, (double) $transaksi->amount_paid - (double) $transaksi->total),
                 'status'        => 'selesai',
             ],
+        ]);
+    }
+
+    /**
+     * API: Ambil Pengaturan Kedai & Pajak dari Database Server
+     */
+    public function getSettings()
+    {
+        $kedai = Kedai::first();
+        if (!$kedai) {
+            $kedai = Kedai::create([
+                'name' => 'More Brew Coffee',
+                'address' => 'Jl. Sasmitatmaja No.6, Paledang, Kec. Lengkong, Kota Bandung, Jawa Barat 40261',
+                'tax_percentage' => 11.0,
+                'is_tax_enabled' => true,
+                'tax_name' => 'PB1 (Pajak Restoran)',
+                'budget_harian' => 1000000.0,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => (string) $kedai->id,
+                'name' => $kedai->name,
+                'address' => $kedai->address ?? '',
+                'phone' => $kedai->phone ?? '',
+                'taxPercentage' => (double) ($kedai->tax_percentage ?? 11.0),
+                'isTaxEnabled' => (bool) ($kedai->is_tax_enabled ?? true),
+                'taxName' => $kedai->tax_name ?? 'PB1 (Pajak Restoran)',
+                'dailyBudget' => (double) ($kedai->budget_harian ?? 1000000.0),
+                'receiptHeader' => $kedai->receipt_header ?? 'something, between home and everywhere',
+                'receiptFooter' => $kedai->receipt_footer ?? 'Silakan datang kembali!',
+                'wifiSsid' => $kedai->wifi_ssid ?? 'moreandmore',
+                'wifiPassword' => $kedai->wifi_password ?? 'bolehlihatsenyumnya?',
+                'instagram' => $kedai->instagram ?? '@morebrewcoffee',
+            ],
+            'server_time' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * API: Update Pengaturan Kedai & Pajak Langsung ke Database Server
+     * Dipanggil dari Aplikasi POS Mobile saat admin mengubah konfigurasi kedai/pajak
+     */
+    public function updateSettings(Request $request)
+    {
+        $kedai = Kedai::first();
+        if (!$kedai) {
+            $kedai = new Kedai();
+        }
+
+        // Support camelCase or snake_case
+        if ($request->has('name') && !empty($request->input('name'))) {
+            $kedai->name = $request->input('name');
+        }
+        if ($request->has('address')) {
+            $kedai->address = $request->input('address');
+        }
+        if ($request->has('phone')) {
+            $kedai->phone = $request->input('phone');
+        }
+
+        if ($request->has('taxPercentage')) {
+            $kedai->tax_percentage = (float) $request->input('taxPercentage');
+        } elseif ($request->has('tax_percentage')) {
+            $kedai->tax_percentage = (float) $request->input('tax_percentage');
+        }
+
+        if ($request->has('isTaxEnabled')) {
+            $kedai->is_tax_enabled = filter_var($request->input('isTaxEnabled'), FILTER_VALIDATE_BOOLEAN);
+        } elseif ($request->has('is_tax_enabled')) {
+            $kedai->is_tax_enabled = filter_var($request->input('is_tax_enabled'), FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ($request->has('taxName')) {
+            $kedai->tax_name = $request->input('taxName');
+        } elseif ($request->has('tax_name')) {
+            $kedai->tax_name = $request->input('tax_name');
+        }
+
+        if ($request->has('dailyBudget')) {
+            $kedai->budget_harian = (float) $request->input('dailyBudget');
+        } elseif ($request->has('budget_harian')) {
+            $kedai->budget_harian = (float) $request->input('budget_harian');
+        }
+
+        if ($request->has('receiptHeader')) {
+            $kedai->receipt_header = $request->input('receiptHeader');
+        } elseif ($request->has('receipt_header')) {
+            $kedai->receipt_header = $request->input('receipt_header');
+        }
+
+        if ($request->has('receiptFooter')) {
+            $kedai->receipt_footer = $request->input('receiptFooter');
+        } elseif ($request->has('receipt_footer')) {
+            $kedai->receipt_footer = $request->input('receipt_footer');
+        }
+
+        if ($request->has('wifiSsid')) {
+            $kedai->wifi_ssid = $request->input('wifiSsid');
+        } elseif ($request->has('wifi_ssid')) {
+            $kedai->wifi_ssid = $request->input('wifi_ssid');
+        }
+
+        if ($request->has('wifiPassword')) {
+            $kedai->wifi_password = $request->input('wifiPassword');
+        } elseif ($request->has('wifi_password')) {
+            $kedai->wifi_password = $request->input('wifi_password');
+        }
+
+        if ($request->has('instagram')) {
+            $kedai->instagram = $request->input('instagram');
+        }
+
+        $kedai->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pengaturan kedai & pajak di server database berhasil diperbarui!',
+            'data' => [
+                'id' => (string) $kedai->id,
+                'name' => $kedai->name,
+                'address' => $kedai->address,
+                'phone' => $kedai->phone,
+                'taxPercentage' => (double) $kedai->tax_percentage,
+                'isTaxEnabled' => (bool) $kedai->is_tax_enabled,
+                'taxName' => $kedai->tax_name,
+                'dailyBudget' => (double) $kedai->budget_harian,
+                'receiptHeader' => $kedai->receipt_header,
+                'receiptFooter' => $kedai->receipt_footer,
+                'wifiSsid' => $kedai->wifi_ssid,
+                'wifiPassword' => $kedai->wifi_password,
+                'instagram' => $kedai->instagram,
+            ],
+            'server_time' => now()->toIso8601String(),
         ]);
     }
 }

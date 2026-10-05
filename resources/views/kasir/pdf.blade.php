@@ -111,7 +111,7 @@
                 <div class="row" style="margin-top: 1px;"><span>Diskon:</span> <span>-Rp {{ number_format($data['discountAmount'] ?? 0, 0, ',', '.') }}</span></div>
             @endif
             @if(($data['tax'] ?? 0) > 0)
-                <div class="row" style="margin-top: 1px;"><span>Pajak ({{ $kData && $kData->tax_percentage ? (int)$kData->tax_percentage : 11 }}%):</span> <span>Rp {{ number_format($data['tax'] ?? 0, 0, ',', '.') }}</span></div>
+                <div class="row" style="margin-top: 1px;"><span>{{ !empty($data['taxName']) ? $data['taxName'] : ($kData && $kData->tax_name ? $kData->tax_name : 'Pajak') }} ({{ $kData && $kData->tax_percentage ? (int)$kData->tax_percentage : 11 }}%):</span> <span>Rp {{ number_format($data['tax'] ?? 0, 0, ',', '.') }}</span></div>
             @endif
             <div class="row bold" style="margin-top: 4px; font-size: 12px;"><span>TOTAL:</span> <span>Rp {{ number_format($data['total'] ?? 0, 0, ',', '.') }}</span></div>
         </div>
