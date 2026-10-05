@@ -161,15 +161,35 @@
         </div>
         
         <div class="cart-footer">
-            <!-- Promo Section -->
-            <div class="promo-section" x-show="cart.length > 0">
-                <div style="font-size: 13px; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between;">
-                    <span>Diskon / Promo</span>
-                    <span x-show="discountAmount > 0" style="color: #ef4444; cursor: pointer;" @click="removePromo()">Hapus</span>
+            <!-- Promo / Voucher Section -->
+            <div class="promo-section" style="margin-bottom: 12px;" x-show="cart.length > 0">
+                <!-- When Voucher Applied -->
+                <div x-show="discountAmount > 0" style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">🎟️</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 13px; color: #065f46;" x-text="promoInput || 'Voucher Aktif'"></div>
+                            <div style="font-size: 11px; color: #047857;" x-text="'Potongan ' + formatMoney(discountAmount)"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" @click="voucherPickerModal = true" style="background: none; border: none; font-size: 11px; font-weight: 700; color: #059669; cursor: pointer; padding: 2px 4px;">Ganti</button>
+                        <button type="button" @click="removePromo()" style="background: #fee2e2; border: none; font-size: 11px; font-weight: 700; color: #dc2626; border-radius: 4px; padding: 2px 6px; cursor: pointer;">&times;</button>
+                    </div>
                 </div>
-                <div class="promo-input-group" x-show="discountAmount === 0">
-                    <input type="text" x-model="promoInput" placeholder="Nominal (Rp) / % / Kode" class="promo-input" @keydown.enter="applyPromo()">
-                    <button class="promo-btn" @click="applyPromo()">Terapkan</button>
+
+                <!-- When No Voucher Applied (1-Click Picker) -->
+                <div x-show="discountAmount === 0">
+                    <button type="button" @click="voucherPickerModal = true" style="width: 100%; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
+                        <div style="display: flex; align-items: center; gap: 8px; text-align: left;">
+                            <span style="font-size: 16px;">🎟️</span>
+                            <div>
+                                <div style="font-size: 12px; font-weight: 700; color: #92400e;">Pilih Voucher Promo / Diskon</div>
+                                <div style="font-size: 10px; color: #b45309;" x-text="availableVouchers.length + ' voucher tersedia - Klik untuk memilih' "></div>
+                            </div>
+                        </div>
+                        <span style="font-size: 11px; font-weight: 700; background: #d97706; color: white; padding: 3px 8px; border-radius: 6px;">Pilih &gt;</span>
+                    </button>
                 </div>
             </div>
             
@@ -196,14 +216,15 @@
                 <span x-text="formatMoney(total)"></span>
             </div>
             
-            <div style="display: flex; gap: 8px;">
-                <button type="button" @click="saveDraft()" class="btn-pay" style="flex: 1; background: white; color: var(--text-main); border: 1px solid var(--border-color);" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" title="Tahan Pesanan (Draft Kasir)">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Tahan (Draft)
+            <div style="display: flex; gap: 6px;">
+                <button type="button" @click="saveDraft()" class="btn-pay" style="flex: 1; background: white; color: #475569; border: 1px solid var(--border-color); font-size: 11px; padding: 10px 2px;" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" title="Tahan Pesanan (Draft Lokal Kasir)">
+                    📝 Draft
                 </button>
-                <button type="button" class="btn-pay" style="flex: 2;" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" @click="openCheckout()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    Bayar
+                <button type="button" @click="saveBayarNanti()" class="btn-pay" style="flex: 1.2; background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; font-size: 11px; padding: 10px 2px;" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" title="Pesanan Bayar Nanti (Open Tab) - Tanpa Cetak Struk">
+                    🍽️ Bayar Nanti
+                </button>
+                <button type="button" class="btn-pay" style="flex: 1.5; font-size: 13px;" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" @click="openCheckout()">
+                    💳 Bayar
                 </button>
             </div>
         </div>
@@ -276,12 +297,18 @@
                 <button @click="pendingOrdersModal = false" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
             </div>
 
-            <!-- Filter & Search Bar -->
+            <!-- Filter & Search Bar (Terpisah: Pesan Meja, Bayar Nanti, & Draft) -->
             <div style="padding: 14px 24px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; background: white;">
                 <div style="display: flex; gap: 6px;">
-                    <button class="pill" :class="{'active': pendingFilter === 'semua'}" @click="pendingFilter = 'semua'" style="font-size: 12px; padding: 6px 12px;">Semua (<span x-text="totalPendingCount"></span>)</button>
-                    <button class="pill" :class="{'active': pendingFilter === 'meja_qr'}" @click="pendingFilter = 'meja_qr'" style="font-size: 12px; padding: 6px 12px;">📱 QR Meja (<span x-text="tableOrdersCount"></span>)</button>
-                    <button class="pill" :class="{'active': pendingFilter === 'draft'}" @click="pendingFilter = 'draft'" style="font-size: 12px; padding: 6px 12px;">📝 Draft Kasir (<span x-text="drafts.length"></span>)</button>
+                    <button class="pill" :class="{'active': pendingFilter === 'meja_qr'}" @click="pendingFilter = 'meja_qr'" style="font-size: 12px; padding: 6px 12px;" :style="pendingFilter === 'meja_qr' ? 'background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd;' : ''">
+                        📱 Pesan Meja (<span x-text="mejaQrOrdersCount"></span>)
+                    </button>
+                    <button class="pill" :class="{'active': pendingFilter === 'bayar_nanti'}" @click="pendingFilter = 'bayar_nanti'" style="font-size: 12px; padding: 6px 12px;" :style="pendingFilter === 'bayar_nanti' ? 'background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;' : ''">
+                        🍽️ Bayar Nanti (<span x-text="bayarNantiOrdersCount"></span>)
+                    </button>
+                    <button class="pill" :class="{'active': pendingFilter === 'draft'}" @click="pendingFilter = 'draft'" style="font-size: 12px; padding: 6px 12px;" :style="pendingFilter === 'draft' ? 'background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;' : ''">
+                        📝 Draft Kasir (<span x-text="drafts.length"></span>)
+                    </button>
                 </div>
                 <div style="flex: 1; min-width: 180px;">
                     <input type="text" x-model="pendingSearch" placeholder="Cari Nama / No Meja..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; outline: none;">
@@ -348,6 +375,65 @@
                     </div>
                 </template>
             </div>
+    <!-- Modal Pilih Voucher Promo (1-Klik Tanpa Ketik) -->
+    <div x-show="voucherPickerModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 160; display: flex; align-items: center; justify-content: center;" x-cloak>
+        <div style="background: white; width: 560px; max-width: 95vw; max-height: 85vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <!-- Header Modal -->
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: #fef3c7; color: #d97706; padding: 8px; border-radius: 10px; font-size: 20px;">🎟️</div>
+                    <div>
+                        <div style="font-size: 17px; font-weight: 700; color: #1e293b;">Pilih Voucher Promo</div>
+                        <div style="font-size: 12px; color: #64748b;" x-text="availableVouchers.length + ' voucher promo aktif tersedia'"></div>
+                    </div>
+                </div>
+                <button @click="voucherPickerModal = false" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- Manual Search / Input fallback -->
+            <div style="padding: 14px 24px; border-bottom: 1px solid var(--border-color); background: #f8fafc;">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" x-model="promoInput" placeholder="Punya kode lain? Masukkan di sini..." style="flex: 1; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; text-transform: uppercase; font-weight: 600; outline: none;" @keydown.enter="applyPromo(); voucherPickerModal = false;">
+                    <button type="button" @click="applyPromo(); voucherPickerModal = false;" style="background: #212121; color: white; border: none; padding: 0 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">Terapkan</button>
+                </div>
+            </div>
+
+            <!-- Voucher List -->
+            <div style="flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 10px;">
+                <template x-if="availableVouchers.length === 0">
+                    <div style="padding: 40px 20px; text-align: center; color: #94a3b8;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">🎟️</div>
+                        <div style="font-size: 15px; font-weight: 600; color: #334155;">Belum Ada Voucher Aktif</div>
+                    </div>
+                </template>
+
+                <template x-for="v in availableVouchers" :key="v.id">
+                    <div style="border: 1px solid #e2e8f0; border-radius: 12px; display: flex; overflow: hidden; background: white; transition: all 0.2s;" :style="promoInput === v.kode ? 'border-color: #22c55e; background: #f0fdf4;' : ''">
+                        <!-- Left Badge -->
+                        <div style="width: 90px; background: #d97706; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 6px; text-align: center;" :style="promoInput === v.kode ? 'background: #16a34a;' : ''">
+                            <span style="font-size: 16px; font-weight: 900;" x-text="v.tipe_diskon === 'persen' ? v.nilai_diskon + '%' : 'Rp ' + (v.nilai_diskon >= 1000 ? (v.nilai_diskon/1000) + 'k' : v.nilai_diskon)"></span>
+                            <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.5px; opacity: 0.9;">DISKON</span>
+                        </div>
+
+                        <!-- Right Info -->
+                        <div style="flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 700; font-size: 14px; color: #0f172a; letter-spacing: 0.5px;" x-text="v.kode"></span>
+                                    <span x-show="promoInput === v.kode" style="font-size: 10px; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 8px; border-radius: 10px;">✓ Terpasang</span>
+                                </div>
+                                <div style="font-size: 12px; color: #475569; margin-top: 2px;" x-text="v.nama"></div>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 4px;" x-text="'Min. Belanja: ' + formatMoney(v.minimal_belanja || 0)"></div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div style="display: flex; align-items: center; padding-right: 16px;">
+                            <button type="button" @click="selectVoucher(v)" style="padding: 8px 14px; border-radius: 8px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; color: white;" :style="promoInput === v.kode ? 'background: #16a34a;' : 'background: #212121;'" x-text="promoInput === v.kode ? 'Ganti' : 'Pakai'"></button>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
     
@@ -408,13 +494,15 @@
                 return ymd + rand;
             })(),
             
-            // Pesanan Belum Bayar (Meja QR & Draft)
+            // Pesanan Belum Bayar (Meja QR, Bayar Nanti, & Draft)
             drafts: [],
             tableOrders: [],
             pendingOrdersModal: false,
-            pendingFilter: 'semua',
+            pendingFilter: 'meja_qr',
             pendingSearch: '',
             checkoutModal: false,
+            voucherPickerModal: false,
+            availableVouchers: @json($data['vouchers'] ?? []),
             paymentMethod: 'cash',
             amountPaid: 0,
             
@@ -425,25 +513,35 @@
             discountAmount: 0,
             appliedVoucherId: null,
 
-            get tableOrdersCount() {
-                return this.tableOrders.length;
+            get mejaQrOrders() {
+                return this.tableOrders.filter(o => o.paymentMethod !== 'bayar_nanti');
+            },
+            get bayarNantiOrders() {
+                return this.tableOrders.filter(o => o.paymentMethod === 'bayar_nanti');
+            },
+            get mejaQrOrdersCount() {
+                return this.mejaQrOrders.length;
+            },
+            get bayarNantiOrdersCount() {
+                return this.bayarNantiOrders.length;
             },
             get totalPendingCount() {
                 return this.tableOrders.length + this.drafts.length;
             },
             get allPendingItems() {
                 const list = [];
-                // 1. Table Orders dari server
-                this.tableOrders.forEach(o => {
+                // 1. Pesan dari Meja (QR Meja Online)
+                this.mejaQrOrders.forEach(o => {
                     const tbl = o.orderType === 'dine_in' ? (o.tableNumber || 'Meja') : 'Takeaway';
                     list.push({
-                        uniqueId: 'tbl-' + o.invoiceNumber,
+                        uniqueId: 'meja-' + o.invoiceNumber,
                         invoiceNumber: o.invoiceNumber,
                         customerName: o.customerName || 'Pelanggan Meja',
                         customerPhone: o.customerPhone || '',
                         orderType: o.orderType || 'dine_in',
                         tableNumber: tbl,
                         typeLabel: '📱 QR Meja',
+                        category: 'meja_qr',
                         isTableOrder: true,
                         cart: (o.items || []).map(i => ({
                             id: i.productId || i.id,
@@ -455,7 +553,30 @@
                         time: o.createdAt ? new Date(o.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'
                     });
                 });
-                // 2. Drafts Kasir
+                // 2. Bayar Nanti (Open Tab Kasir)
+                this.bayarNantiOrders.forEach(o => {
+                    const tbl = o.orderType === 'dine_in' ? (o.tableNumber || 'Meja') : 'Takeaway';
+                    list.push({
+                        uniqueId: 'bn-' + o.invoiceNumber,
+                        invoiceNumber: o.invoiceNumber,
+                        customerName: o.customerName || 'Pelanggan Kasir',
+                        customerPhone: o.customerPhone || '',
+                        orderType: o.orderType || 'dine_in',
+                        tableNumber: tbl,
+                        typeLabel: '🍽️ Bayar Nanti',
+                        category: 'bayar_nanti',
+                        isTableOrder: true,
+                        cart: (o.items || []).map(i => ({
+                            id: i.productId || i.id,
+                            name: i.name,
+                            price: i.price,
+                            qty: i.quantity || i.qty || 1
+                        })),
+                        total: o.total || 0,
+                        time: o.createdAt ? new Date(o.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'
+                    });
+                });
+                // 3. Drafts Kasir Lokal
                 this.drafts.forEach((d, idx) => {
                     list.push({
                         uniqueId: 'draft-' + (d.id || idx),
@@ -466,6 +587,7 @@
                         orderType: d.orderType,
                         tableNumber: d.tableNumber || 'Draft Kasir',
                         typeLabel: '📝 Draft Kasir',
+                        category: 'draft',
                         isTableOrder: false,
                         cart: d.cart,
                         total: d.total,
@@ -476,13 +598,12 @@
             },
             get filteredPendingList() {
                 return this.allPendingItems.filter(item => {
-                    if (this.pendingFilter === 'meja_qr' && !item.isTableOrder) return false;
-                    if (this.pendingFilter === 'draft' && item.isTableOrder) return false;
+                    if (this.pendingFilter !== item.category) return false;
                     if (this.pendingSearch.trim()) {
                         const q = this.pendingSearch.toLowerCase();
-                        const matchName = item.customerName.toLowerCase().includes(q);
-                        const matchTable = item.tableNumber.toLowerCase().includes(q);
-                        const matchInv = item.invoiceNumber.toLowerCase().includes(q);
+                        const matchName = (item.customerName || '').toLowerCase().includes(q);
+                        const matchTable = (item.tableNumber || '').toLowerCase().includes(q);
+                        const matchInv = (item.invoiceNumber || '').toLowerCase().includes(q);
                         return matchName || matchTable || matchInv;
                     }
                     return true;
@@ -673,6 +794,59 @@
                 this.promoInput = '';
                 this.appliedVoucherId = null;
                 this.showNotification('Voucher dihapus', 'success');
+            },
+
+            selectVoucher(v) {
+                this.promoInput = v.kode;
+                this.appliedVoucherId = v.id;
+                this.voucherPickerModal = false;
+                this.applyPromo();
+            },
+
+            async saveBayarNanti() {
+                if (this.cart.length === 0) {
+                    this.showNotification('Keranjang belanja masih kosong.', 'error');
+                    return;
+                }
+                
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                
+                const orderData = {
+                    invoiceNumber: this.invoiceNumber,
+                    customerName: this.customerName || 'Pelanggan Walk-In',
+                    customerPhone: this.customerPhone || '',
+                    orderType: this.orderType,
+                    tableNumber: this.selectedTable || '-',
+                    cart: this.cart,
+                    subtotal: this.subtotal,
+                    discountAmount: this.discountAmount,
+                    tax: this.tax,
+                    total: this.total,
+                    paymentMethod: 'bayar_nanti',
+                    amountPaid: 0,
+                    voucherId: this.appliedVoucherId,
+                };
+                
+                try {
+                    const res = await fetch('{{ route("kasir.simpan_open_tab") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.showNotification('Pesanan berhasil disimpan ke Bayar Nanti (tanpa cetak struk).', 'success');
+                        this.resetCart();
+                        this.fetchPendingTableOrders();
+                    } else {
+                        this.showNotification(data.message || 'Gagal menyimpan pesanan.', 'error');
+                    }
+                } catch (e) {
+                    this.showNotification('Terjadi kesalahan koneksi server.', 'error');
+                }
             },
             
             addToCart(product) {

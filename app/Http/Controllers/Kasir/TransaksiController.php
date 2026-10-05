@@ -66,6 +66,39 @@ class TransaksiController extends Controller
         return view('kasir.pdf', compact('data'));
     }
 
+    public function simpanOpenTab(\Illuminate\Http\Request $request)
+    {
+        $data = $request->all();
+
+        $cName = $data['customerName'] ?? 'Pelanggan Walk-In';
+        $cPhone = !empty($data['customerPhone']) ? trim($data['customerPhone']) : '';
+        if (!empty($cPhone) && !str_contains($cName, $cPhone)) {
+            $cName .= ' (' . $cPhone . ')';
+        }
+
+        $inv = preg_replace('/^INV-?/i', '', (string)($data['invoiceNumber'] ?? (date('ymd') . rand(1000, 9999))));
+
+        $transaksi = \App\Models\Transaksi::create([
+            'invoice_number' => $inv,
+            'customer_name'  => $cName,
+            'order_type'     => $data['orderType'] ?? 'dine_in',
+            'items'          => $data['cart'] ?? [],
+            'subtotal'       => $data['subtotal'] ?? 0,
+            'discount_amount'=> $data['discountAmount'] ?? 0,
+            'tax'            => $data['tax'] ?? 0,
+            'total'          => $data['total'] ?? 0,
+            'payment_method' => 'bayar_nanti',
+            'amount_paid'    => 0,
+            'created_at'     => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan berhasil disimpan ke daftar Bayar Nanti (tanpa cetak struk).',
+            'invoice' => $inv,
+        ]);
+    }
+
     public function cetakUlang($id)
     {
         $transaksi = \App\Models\Transaksi::findOrFail($id);

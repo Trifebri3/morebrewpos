@@ -90,7 +90,20 @@ class SyncController extends Controller
             ];
         });
 
-        // Data Voucher
+        // Data Voucher (Auto-seed jika belum ada di database)
+        if (Voucher::count() === 0) {
+            $kedaiId = $kedai ? $kedai->id : 1;
+            $defaultVouchers = [
+                ['kedai_id' => $kedaiId, 'kode' => 'MOREBREW10', 'nama' => 'Diskon 10% Spesial', 'tipe_diskon' => 'persen', 'nilai_diskon' => 10, 'minimal_belanja' => 25000, 'kuota' => 500, 'status' => true],
+                ['kedai_id' => $kedaiId, 'kode' => 'HEMAT5K', 'nama' => 'Potongan Hemat Rp 5.000', 'tipe_diskon' => 'nominal', 'nilai_diskon' => 5000, 'minimal_belanja' => 30000, 'kuota' => 300, 'status' => true],
+                ['kedai_id' => $kedaiId, 'kode' => 'DISKON15', 'nama' => 'Promo Diskon 15%', 'tipe_diskon' => 'persen', 'nilai_diskon' => 15, 'minimal_belanja' => 50000, 'kuota' => 200, 'status' => true],
+                ['kedai_id' => $kedaiId, 'kode' => 'KOPISANTAI', 'nama' => 'Potongan Ngopi Rp 10.000', 'tipe_diskon' => 'nominal', 'nilai_diskon' => 10000, 'minimal_belanja' => 60000, 'kuota' => 150, 'status' => true],
+            ];
+            foreach ($defaultVouchers as $dv) {
+                Voucher::create($dv);
+            }
+        }
+
         $vouchers = Voucher::where('status', true)->get()->map(function ($v) {
             $isPercent = $v->tipe_diskon === 'persen' || stripos($v->tipe_diskon, 'persen') !== false;
             return [
@@ -99,7 +112,7 @@ class SyncController extends Controller
                 'type' => $isPercent ? 'persen' : 'nominal',
                 'value' => (double) $v->nilai_diskon,
                 'minOrder' => (double) ($v->minimal_belanja ?? 0),
-                'maxDiscount' => 0.0,
+                'maxDiscount' => (double) ($v->maksimal_diskon ?? ($isPercent ? 25000 : 0)),
                 'quota' => (int) ($v->kuota ?? 100),
                 'used' => (int) ($v->terpakai ?? 0),
                 'isActive' => (bool) $v->status,
@@ -124,30 +137,30 @@ class SyncController extends Controller
                 'change' => max(0, (double) $t->amount_paid - (double) $t->total),
                 'cashierId' => '1',
                 'cashierName' => 'Kasir',
-                'status' => $t->is_refunded ? 'refunded' : ($t->payment_method === 'pending' ? 'pending' : 'selesai'),
+                'status' => $t->is_refunded ? 'refunded' : ($t->payment_method === 'pending' || $t->payment_method === 'bayar_nanti' ? 'pending' : 'selesai'),
                 'refundReason' => $t->refund_reason,
                 'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
                 'syncStatus' => 'synced',
             ];
         });
 
-        // Data Pesanan Meja yang Menunggu Pembayaran (Pending Table Orders)
-        $pendingTableOrders = Transaksi::where('payment_method', 'pending')
+        // Data Pesanan yang Menunggu Pembayaran (QR Meja 'pending' & Kasir 'bayar_nanti')
+        $pendingTableOrders = Transaksi::whereIn('payment_method', ['pending', 'bayar_nanti'])
             ->latest()
             ->get()
             ->map(function ($t) {
                 return [
                     'id' => (string) $t->id,
                     'invoiceNumber' => $t->invoice_number,
-                    'customerName' => $t->customer_name ?? 'Pelanggan Meja',
+                    'customerName' => $t->customer_name ?? 'Pelanggan',
                     'orderType' => $t->order_type ?? 'dine_in',
                     'items' => $t->items ?? [],
                     'subtotal' => (double) $t->subtotal,
                     'discount' => (double) $t->discount_amount,
                     'tax' => (double) $t->tax,
                     'total' => (double) $t->total,
-                    'paymentMethod' => 'pending',
-                    'amountPaid' => 0.0,
+                    'paymentMethod' => $t->payment_method ?? 'pending',
+                    'amountPaid' => (double) ($t->amount_paid ?? 0),
                     'change' => 0.0,
                     'cashierId' => '',
                     'cashierName' => '',
@@ -488,26 +501,26 @@ class SyncController extends Controller
     }
 
     /**
-     * API: Ambil semua pesanan meja yang berstatus 'pending' (menunggu kasir bayar)
+     * API: Ambil semua pesanan yang berstatus 'pending' (QR meja & Bayar Nanti)
      */
     public function getPendingTableOrders()
     {
-        $orders = Transaksi::where('payment_method', 'pending')
+        $orders = Transaksi::whereIn('payment_method', ['pending', 'bayar_nanti'])
             ->latest()
             ->get()
             ->map(function ($t) {
                 return [
                     'id' => (string) $t->id,
                     'invoiceNumber' => $t->invoice_number,
-                    'customerName' => $t->customer_name ?? 'Pelanggan Meja',
+                    'customerName' => $t->customer_name ?? 'Pelanggan',
                     'orderType' => $t->order_type ?? 'dine_in',
                     'items' => $t->items ?? [],
                     'subtotal' => (double) $t->subtotal,
                     'discount' => (double) $t->discount_amount,
                     'tax' => (double) $t->tax,
                     'total' => (double) $t->total,
-                    'paymentMethod' => 'pending',
-                    'amountPaid' => 0.0,
+                    'paymentMethod' => $t->payment_method ?? 'pending',
+                    'amountPaid' => (double) ($t->amount_paid ?? 0),
                     'change' => 0.0,
                     'cashierId' => '',
                     'cashierName' => '',
@@ -526,12 +539,13 @@ class SyncController extends Controller
     }
 
     /**
-     * API: Kasir memproses pembayaran pesanan meja
-     * Mengubah status pesanan meja menjadi selesai/terbayar
+     * API: Kasir memproses pembayaran pesanan meja / bayar nanti
+     * Mengubah status pesanan menjadi selesai/terbayar
      */
     public function payTableOrder(Request $request, $invoice)
     {
-        $transaksi = Transaksi::where('invoice_number', $invoice)->first();
+        $cleanInv = preg_replace('/^INV-?/i', '', (string)$invoice);
+        $transaksi = Transaksi::where('invoice_number', $cleanInv)->orWhere('invoice_number', $invoice)->first();
         if (!$transaksi) {
             return response()->json([
                 'status' => 'error',
@@ -553,7 +567,7 @@ class SyncController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Pesanan meja #' . $invoice . ' berhasil dibayar via ' . $paymentMethod . '.',
+            'message' => 'Pesanan #' . $invoice . ' berhasil dibayar via ' . $paymentMethod . '.',
             'data'    => [
                 'invoiceNumber' => $transaksi->invoice_number,
                 'paymentMethod' => $transaksi->payment_method,

@@ -43,7 +43,9 @@ class DashboardService
                     ['label' => 'Laporan Shift', 'url' => route('kasir.laporan.shift'), 'active' => request()->routeIs('kasir.laporan.shift')],
                 ],
             ],
-            'products' => $products
+            'products' => $products,
+            'vouchers' => \App\Models\Voucher::where('status', true)->get(),
+            'tables' => \App\Models\Meja::all(),
         ];
     }
 }

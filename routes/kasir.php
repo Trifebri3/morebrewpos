@@ -29,6 +29,7 @@ Route::prefix('laporan')->name('kasir.laporan.')->group(function () {
 
 // Lainnya
 Route::post('/cetak-struk', [TransaksiController::class, 'cetakStruk'])->name('kasir.cetak_struk');
+Route::post('/simpan-open-tab', [TransaksiController::class, 'simpanOpenTab'])->name('kasir.simpan_open_tab');
 Route::get('/cetak-ulang/{id}', [TransaksiController::class, 'cetakUlang'])->name('kasir.cetak_ulang');
 Route::get('/riwayat-invoice', [TransaksiController::class, 'invoice'])->name('kasir.invoice');
 Route::get('/absensi', [AbsensiController::class, 'index'])->name('kasir.absensi');
