@@ -112,7 +112,7 @@
         <div style="padding: 14px 16px; max-height: 72vh; overflow-y: auto; background: #fdfdfd; font-family: 'Courier New', Courier, monospace; color: black; font-size: 10px;">
             <!-- Header Logo & Alamat 2 Baris -->
             <div style="text-align: center; margin-bottom: 6px;">
-                <img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 32px; margin-bottom: 2px; object-fit: contain;">
+                <img src="{{ asset('logo.png') }}?v={{ file_exists(public_path('logo.png')) ? filemtime(public_path('logo.png')) : 1 }}" alt="Logo" style="max-height: 32px; margin-bottom: 2px; object-fit: contain; background: transparent; border: none; box-shadow: none;">
                 <div style="font-size: 8.5px; line-height: 1.2;">something, between home and<br>everywhare</div>
                 <div style="font-size: 8.5px; line-height: 1.2; margin-top: 4px;">
                     Jl. Sasmitatmaja No.6, Paledang<br>

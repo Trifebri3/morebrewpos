@@ -1,6 +1,6 @@
     <aside class="sidebar-left">
         <div class="brand" style="display: flex; align-items: center; gap: 12px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
-            <img src="{{ asset('logo.png') }}" alt="Logo" style="width: 38px; height: 38px; object-fit: contain; flex-shrink: 0;" onerror="this.src='https://placehold.co/38x38/transparent/000000?text=MB'">
+            <img src="{{ asset('logo.png') }}?v={{ file_exists(public_path('logo.png')) ? filemtime(public_path('logo.png')) : 1 }}" alt="Logo MoreBrew" style="width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; background: transparent; border: none; box-shadow: none;" onerror="this.src='https://placehold.co/38x38/transparent/000000?text=MB'">
             <div>
                 <h2 style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.2; letter-spacing: -0.3px;">MoreBrew POS</h2>
                 <span style="font-size: 11px; color: #64748b; font-weight: 500;">Specialty Coffee & Lab</span>

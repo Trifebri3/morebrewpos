@@ -81,21 +81,29 @@
                 <div class="pill" :class="{'active': activeCategory === 'Lainnya'}" @click="activeCategory = 'Lainnya'">Lainnya</div>
             </div>
             
-            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                <a href="{{ route('kasir.pengaturan') }}" style="font-size: 13px; font-weight: 600; color: #0f172a; background: #ffffff; padding: 8px 14px; border-radius: 20px; border: 1px solid #e2e8f0; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: all 0.2s;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Pengaturan</span>
+                    <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;" :style="useTax ? 'background: #dcfce7; color: #166534;' : 'background: #f1f5f9; color: #64748b;'" x-text="useTax ? 'Pajak ' + taxPercentage + '%' : 'Bebas Pajak'"></span>
+                </a>
                 @if(isset($data['kedai']) && $data['kedai']->is_qr_absen_enabled)
-                <button @click="showAbsenModal = true; startQrScanner()" style="font-size: 13px; font-weight: 600; color: white; background: var(--text-main); padding: 10px 16px; border-radius: 20px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                <button @click="showAbsenModal = true; startQrScanner()" style="font-size: 13px; font-weight: 600; color: white; background: var(--text-main); padding: 9px 16px; border-radius: 20px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                     Absen QR
                 </button>
                 @endif
                 <div>
-                    <button @click="openPendingOrdersModal()" style="font-size: 13px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 10px 16px; border-radius: 20px; border: 1.5px solid #fcd34d; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <button @click="openPendingOrdersModal()" style="font-size: 13px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 9px 16px; border-radius: 20px; border: 1.5px solid #fcd34d; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                         Belum Bayar (<span x-text="totalPendingCount"></span>)
                     </button>
                 </div>
-                <div style="position: relative; flex: 1; min-width: 200px;">
-                    <input type="text" x-model="searchQuery" placeholder="Cari menu..." style="width: 100%; padding: 10px 16px 10px 36px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 14px; outline: none; box-sizing: border-box;">
+                <div style="position: relative; flex: 1; min-width: 180px;">
+                    <input type="text" x-model="searchQuery" placeholder="Cari menu..." style="width: 100%; padding: 9px 16px 9px 36px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 13.5px; outline: none; box-sizing: border-box;">
                     <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
@@ -205,10 +213,11 @@
             
             <div class="summary-row" style="align-items: center;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" x-model="useTax" style="width: 16px; height: 16px; accent-color: var(--text-main);">
-                    <span><span x-text="taxName"></span> (<span x-text="taxPercentage"></span>%)</span>
+                    <input type="checkbox" x-model="useTax" style="width: 16px; height: 16px; accent-color: #0f172a; cursor: pointer;">
+                    <span x-show="useTax" style="font-weight: 500;"><span x-text="taxName"></span> (<span x-text="taxPercentage"></span>%)</span>
+                    <span x-show="!useTax" style="color: #64748b; font-size: 13px;">Bebas Pajak (0%)</span>
                 </label>
-                <span style="font-weight: 500; color: var(--text-main);" x-text="formatMoney(tax)"></span>
+                <span style="font-weight: 600;" :style="useTax ? 'color: var(--text-main);' : 'color: #94a3b8;'" x-text="useTax ? formatMoney(tax) : 'Rp 0'"></span>
             </div>
             
             <div class="summary-total">
@@ -921,7 +930,7 @@
                 this.amountPaid = 0;
                 this.discountAmount = 0;
                 this.promoInput = '';
-                this.useTax = true;
+                this.useTax = {{ isset($data['kedai']) && $data['kedai']->is_tax_enabled ? 'true' : 'false' }};
                 this.appliedVoucherId = null;
             },
             

@@ -91,3 +91,16 @@ test('kasir can access laporan pages and export excel', function () {
     $response = $this->actingAs($this->kasir)->get(route('kasir.laporan.shift.export'));
     $response->assertStatus(200);
 });
+
+test('admin can access staff karyawan and shift pages', function () {
+    $response = $this->actingAs($this->admin)->get(route('admin.staff.karyawan.index'));
+    $response->assertStatus(200);
+
+    $response = $this->actingAs($this->admin)->get(route('admin.staff.shift'));
+    $response->assertStatus(200);
+});
+
+test('kasir can access absensi clock in out kiosk', function () {
+    $response = $this->actingAs($this->kasir)->get(route('kasir.absensi'));
+    $response->assertStatus(200);
+});

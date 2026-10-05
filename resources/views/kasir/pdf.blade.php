@@ -62,7 +62,7 @@
 
         <!-- Section 1: Logo, Slogan, Alamat 2 Baris, Invoice Header -->
         <div class="center border-bottom">
-            <div style="margin-bottom: 3px;"><img src="{{ asset('logo.png') }}" alt="Logo" style="max-height: 32px; object-fit: contain;"></div>
+            <div style="margin-bottom: 3px;"><img src="{{ asset('logo.png') }}?v={{ file_exists(public_path('logo.png')) ? filemtime(public_path('logo.png')) : 1 }}" alt="Logo" style="max-height: 32px; object-fit: contain; background: transparent; border: none; box-shadow: none;"></div>
             <div class="text-sm">something, between home and<br>everywhare</div>
             <div class="text-sm" style="margin-top: 3px;">
                 {{ $line1 }}<br>

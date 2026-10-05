@@ -2,237 +2,311 @@
 
 @section('content')
 <style>
-    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
-    .header-box { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-    
-    .card { background: white; border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; margin-bottom: 24px; padding: 24px; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: 12px 24px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-    .table th { font-weight: 500; color: var(--text-muted); background: #fafafa; }
-    .table tr:last-child td { border-bottom: none; }
-    
-    .btn-action { padding: 14px 28px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 16px; color: white; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-    .btn-masuk { background: #0ea5e9; }
-    .btn-masuk:hover { background: #0284c7; }
-    .btn-keluar { background: #ef4444; }
-    .btn-keluar:hover { background: #dc2626; }
-    .btn-disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
-    
-    .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-    .badge-valid { background: #dcfce7; color: #166534; }
+    :root {
+        --pure-black: #000000;
+        --dark-slate: #0f172a;
+        --border-subtle: #e2e8f0;
+        --bg-subtle: #f8fafc;
+    }
+
+    .kasir-absensi-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 28px 24px 60px;
+    }
+
+    .header-box {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 22px 28px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .app-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid var(--border-subtle);
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .live-clock-card {
+        background: var(--dark-slate);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 24px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .btn-clock {
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        font-size: 15px;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .btn-clock-in {
+        background: #10b981;
+    }
+    .btn-clock-in:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+    .btn-clock-out {
+        background: #ef4444;
+    }
+    .btn-clock-out:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+    .chip-in {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .chip-out {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+        text-align: left;
+    }
+    .table th {
+        padding: 12px 20px;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .table td {
+        padding: 13px 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        vertical-align: middle;
+    }
 </style>
 
-<div class="container" style="max-width: 100%; padding: 24px;">
+<div class="kasir-absensi-container">
+    <!-- Header Greeting -->
     <div class="header-box">
         <div>
-            <h1 style="font-size: 24px; margin-bottom: 4px;">Clock In / Absensi</h1>
-            <p style="color: var(--text-muted); font-size: 14px;">Catat kehadiran harian Anda sebagai kasir.</p>
+            <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Presensi & Absensi Kasir</h1>
+            <p style="color: #64748b; font-size: 13px; margin: 0;">Catat waktu mulai dan selesai shift kerja Anda secara akurat.</p>
         </div>
-        <div>
-            <span style="background: #e0f2fe; color: #0369a1; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px;">Hari Ini: {{ date('d M Y') }}</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="background: #f1f5f9; color: #0f172a; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 12.5px; border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
+            </span>
         </div>
     </div>
 
     @if(session('success'))
-        <div style="padding: 16px; background: #dcfce7; color: #166534; border-radius: 8px; margin-bottom: 24px; font-weight: 500;">
-            {{ session('success') }}
+        <div style="padding: 14px 18px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 12px; margin-bottom: 22px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>{{ session('success') }}</span>
         </div>
     @endif
     
     @if(session('error'))
-        <div style="padding: 16px; background: #fee2e2; color: #991b1b; border-radius: 8px; margin-bottom: 24px; font-weight: 500;">
-            {{ session('error') }}
+        <div style="padding: 14px 18px; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 12px; margin-bottom: 22px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 
-    <div class="card" style="display: flex; gap: 16px; align-items: center;">
-        @if(isset($kedai) && $kedai->is_qr_absen_enabled)
-            <div style="flex: 1; text-align: center; padding: 24px;">
-                <h3 style="margin: 0 0 16px 0; font-size: 18px; color: var(--text-main);">Kamera Absensi (Scan QR)</h3>
-                
-                <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color);"></div>
-                <div id="scan-result" style="margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 600; display: none;"></div>
-                
-                <p style="margin: 16px 0 0 0; font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-                    Arahkan QR Code Karyawan ke depan kamera untuk melakukan Clock In atau Clock Out.
-                </p>
-            </div>
-        @elseif(isset($kedai) && $kedai->is_link_absen_enabled)
-            <div style="flex: 1; text-align: center; padding: 24px;">
-                <svg style="width: 48px; height: 48px; color: var(--text-main); margin-bottom: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                <h3 style="margin: 0 0 8px 0; font-size: 18px; color: var(--text-main);">Mode Absensi Tautan Publik Aktif</h3>
-                <p style="margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.5;">
-                    Silakan gunakan *smartphone* Anda dan akses tautan publik untuk mengambil *selfie* di lokasi kedai.
-                </p>
-                <div style="margin-top: 16px; font-family: monospace; font-size: 16px; font-weight: 700; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px dashed var(--border-color); color: #0f172a;">
-                    {{ url('/absen') }}
-                </div>
-            </div>
-        @else
+    <!-- LIVE CLOCK & ACTION BANNER -->
+    <div class="live-clock-card">
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Waktu Sistem POS</div>
+            <div id="live-time" style="font-size: 36px; font-weight: 900; font-family: monospace; letter-spacing: -1px; margin: 2px 0;">--:--:--</div>
+            <div style="font-size: 12.5px; color: #cbd5e1;">Staf: <strong>{{ auth()->user()->name ?? 'Kasir' }}</strong> • Kedai: {{ $kedai->name ?? 'MOREBREWW' }}</div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
             @if(!$sudahMasuk)
                 <form id="form-masuk" action="{{ route('kasir.absensi.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="type" value="Masuk">
                     <input type="hidden" name="latitude" id="lat-masuk">
                     <input type="hidden" name="longitude" id="lon-masuk">
-                    <button type="button" onclick="submitAbsenForm('form-masuk', 'lat-masuk', 'lon-masuk')" class="btn-action btn-masuk">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                        Clock In (Masuk)
+                    <button type="button" onclick="submitAbsenGps('form-masuk', 'lat-masuk', 'lon-masuk')" class="btn-clock btn-clock-in">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        <span>Clock In (Masuk)</span>
                     </button>
                 </form>
-            @endif
-
-            @if($sudahMasuk && !$sudahKeluar)
+            @elseif($sudahMasuk && !$sudahKeluar)
                 <form id="form-keluar" action="{{ route('kasir.absensi.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="type" value="Keluar">
                     <input type="hidden" name="latitude" id="lat-keluar">
                     <input type="hidden" name="longitude" id="lon-keluar">
-                    <button type="button" onclick="submitAbsenForm('form-keluar', 'lat-keluar', 'lon-keluar')" class="btn-action btn-keluar">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        Clock Out (Keluar)
+                    <button type="button" onclick="submitAbsenGps('form-keluar', 'lat-keluar', 'lon-keluar')" class="btn-clock btn-clock-out">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        <span>Clock Out (Keluar)</span>
                     </button>
                 </form>
-            @endif
-
-            @if($sudahMasuk && $sudahKeluar)
-                <div style="flex: 1; text-align: center; padding: 12px; color: #166534; font-weight: 600; background: #dcfce7; border-radius: 8px;">
-                    Anda sudah menyelesaikan absensi (Masuk & Keluar) untuk hari ini. Selamat beristirahat!
+            @else
+                <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 12px; padding: 12px 20px; text-align: right;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: #34d399;">✓ Absensi Lengkap Hari Ini</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1; margin-top: 2px;">Anda sudah tercatat Clock In & Clock Out.</div>
                 </div>
             @endif
-        @endif
+        </div>
     </div>
 
+    <!-- QR CAMERA SCANNER OR SMARTPHONE LINK CARD -->
+    @if(isset($kedai) && $kedai->is_qr_absen_enabled)
+    <div class="app-card" style="padding: 24px; text-align: center;">
+        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Kamera Scanner QR Code (Opsional)</h3>
+        <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">Arahkan kartu QR code karyawan Anda ke kamera untuk absen otomatis tanpa klik tombol.</p>
+        
+        <div id="reader" style="width: 100%; max-width: 380px; margin: 0 auto; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--border-subtle);"></div>
+        <div id="scan-result" style="margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; display: none;"></div>
+    </div>
+    @endif
+
+    <!-- TODAY'S SHIFT RECAP -->
     @if(count($recap) > 0)
-    <div class="card" style="padding: 16px 24px;">
-        <h3 style="margin: 0 0 16px 0; font-size: 16px; color: var(--text-main);">Rekap Kehadiran Shift Hari Ini</h3>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <div class="app-card" style="padding: 20px 24px;">
+        <h3 style="margin: 0 0 14px 0; font-size: 15px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Jadwal & Rekap Kehadiran Shift Hari Ini</span>
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
             @foreach($recap as $s)
-            <div style="border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 8px; font-size: 13px; background: #fafafa; flex: 1; min-width: 200px;">
-                <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">{{ $s['name'] }} <span style="font-weight: 400; color: var(--text-muted);">({{ $s['jam'] }})</span></strong>
-                <span style="color: var(--text-main); font-weight: 600;">Hadir: <span style="color: #166534;">{{ $s['hadir'] }}</span>/{{ $s['total_karyawan'] }}</span> | 
-                <span style="color: var(--text-main); font-weight: 600;">Telat: <span style="color: #991b1b;">{{ $s['terlambat'] }}</span></span>
+            <div style="border: 1px solid var(--border-subtle); padding: 14px 16px; border-radius: 12px; background: #fafafa;">
+                <div style="font-weight: 700; color: #0f172a; font-size: 14px;">{{ $s['name'] }}</div>
+                <div style="font-size: 12px; font-family: monospace; color: #64748b; margin-top: 2px;">{{ $s['jam'] }}</div>
+                <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 12.5px; border-top: 1px dashed var(--border-subtle); padding-top: 8px;">
+                    <span>Hadir: <strong style="color: #166534;">{{ $s['hadir'] }}</strong> / {{ $s['total_karyawan'] }}</span>
+                    <span>Telat: <strong style="color: {{ $s['terlambat'] > 0 ? '#dc2626' : '#64748b' }};">{{ $s['terlambat'] }}</strong></span>
+                </div>
             </div>
             @endforeach
         </div>
     </div>
     @endif
 
-    <div class="card" style="padding: 0;">
-        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 16px; background: #fafafa;">
-            Riwayat Absensi Terakhir
+    <!-- PERSONAL ATTENDANCE HISTORY -->
+    <div class="app-card">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">Riwayat Absensi Terakhir Anda</h3>
+            <span style="font-size: 12px; color: #64748b;">10 data terakhir</span>
         </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Waktu & Tanggal</th>
-                    <th>Tipe</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($riwayat as $item)
-                <tr>
-                    <td>{{ \Carbon\Carbon::parse($item->created_at)->format('H:i | d M Y') }}</td>
-                    <td style="font-weight: 600; color: {{ $item->type == 'Masuk' ? '#0ea5e9' : '#ef4444' }};">{{ $item->type }}</td>
-                    <td><span class="badge badge-{{ strtolower($item->status) }}">{{ $item->status }}</span></td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 32px;">Belum ada riwayat absensi.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Waktu & Tanggal</th>
+                        <th>Tipe Absen</th>
+                        <th>Status</th>
+                        <th>Lokasi GPS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($riwayat as $item)
+                    <tr>
+                        <td>
+                            <strong style="color: #0f172a;">{{ \Carbon\Carbon::parse($item->created_at)->format('H:i:s') }} WIB</strong>
+                            <div style="font-size: 11.5px; color: #64748b;">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}</div>
+                        </td>
+                        <td>
+                            <span class="status-chip {{ $item->type === 'Masuk' ? 'chip-in' : 'chip-out' }}">
+                                {{ $item->type }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 12.5px; font-weight: 600; color: {{ str_contains($item->status, 'Terlambat') ? '#dc2626' : '#15803d' }};">
+                                {{ $item->status }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($item->latitude && $item->longitude)
+                                <a href="https://maps.google.com/?q={{ $item->latitude }},{{ $item->longitude }}" target="_blank" style="font-size: 12px; color: #0f172a; text-decoration: underline; font-weight: 600;">
+                                    {{ round($item->latitude, 4) }}, {{ round($item->longitude, 4) }} ↗
+                                </a>
+                            @else
+                                <span style="font-size: 12px; color: #94a3b8;">-</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #64748b; padding: 36px;">Belum ada riwayat absensi.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-@if(isset($kedai) && $kedai->is_qr_absen_enabled)
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        let isScanning = false;
-        
-        function onScanSuccess(decodedText, decodedResult) {
-            if (isScanning) return; // Prevent multiple scans
-            isScanning = true;
-            
-            const resultBox = document.getElementById('scan-result');
-            resultBox.className = 'status-alert';
-            resultBox.style.display = 'block';
-            resultBox.style.background = '#eff6ff';
-            resultBox.style.color = '#1d4ed8';
-            resultBox.innerHTML = 'Memproses...';
-            
-            const csrfToken = '{{ csrf_token() }}';
-
-            fetch("{{ route('admin.staff.absensi.scan') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ qr_code: decodedText })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    resultBox.style.background = '#dcfce7';
-                    resultBox.style.color = '#166534';
-                    resultBox.innerHTML = data.message;
-                    
-                    // Reload after 2 seconds to show updated riwayat
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    resultBox.style.background = '#fee2e2';
-                    resultBox.style.color = '#991b1b';
-                    resultBox.innerHTML = data.message;
-                    
-                    setTimeout(() => {
-                        isScanning = false;
-                        resultBox.style.display = 'none';
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                resultBox.style.background = '#fee2e2';
-                resultBox.style.color = '#991b1b';
-                resultBox.innerHTML = 'Terjadi kesalahan sistem!';
-                
-                setTimeout(() => { 
-                    isScanning = false; 
-                    resultBox.style.display = 'none'; 
-                }, 3000);
-            });
+    // Live Digital Clock
+    function updateClock() {
+        const d = new Date();
+        const hrs = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        const sec = String(d.getSeconds()).padStart(2, '0');
+        const clockEl = document.getElementById('live-time');
+        if (clockEl) {
+            clockEl.innerText = `${hrs}:${min}:${sec} WIB`;
         }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-        function onScanFailure(error) {
-            // handle scan failure, usually better to ignore and keep scanning
-        }
-
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: {width: 250, height: 250} },
-            /* verbose= */ false);
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    });
-</script>
-@endif
-
-<script>
-    function submitAbsenForm(formId, latId, lonId) {
+    // Geolocation submission helper
+    function submitAbsenGps(formId, latId, lonId) {
         if (!navigator.geolocation) {
-            alert("Browser Anda tidak mendukung fitur lokasi. Pastikan menggunakan browser versi terbaru.");
+            document.getElementById(formId).submit();
             return;
         }
 
         const btn = document.querySelector(`#${formId} button`);
-        const originalText = btn.innerHTML;
-        btn.innerHTML = 'Mencari Lokasi...';
-        btn.disabled = true;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>Mengambil Lokasi GPS...</span>';
+        }
 
         navigator.geolocation.getCurrentPosition(
             function(position) {
@@ -240,14 +314,60 @@
                 document.getElementById(lonId).value = position.coords.longitude;
                 document.getElementById(formId).submit();
             },
-            function(error) {
-                alert("Gagal mendapatkan lokasi GPS. Mohon izinkan akses lokasi pada browser Anda.");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+            function() {
+                // Submit without coordinates if permission denied
+                document.getElementById(formId).submit();
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 6000 }
         );
     }
 </script>
 
+@if(isset($kedai) && $kedai->is_qr_absen_enabled)
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let isScanning = false;
+        const html5QrCode = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 220 });
+        
+        html5QrCode.render(function(decodedText) {
+            if (isScanning) return;
+            isScanning = true;
+
+            const res = document.getElementById('scan-result');
+            res.style.display = 'block';
+            res.style.background = '#fef3c7';
+            res.style.color = '#92400e';
+            res.innerText = 'Memproses scan QR...';
+
+            fetch("{{ route('admin.staff.absensi.scan') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ qr_code: decodedText })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    res.style.background = '#dcfce7';
+                    res.style.color = '#166534';
+                    res.innerText = data.message;
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    res.style.background = '#fee2e2';
+                    res.style.color = '#991b1b';
+                    res.innerText = data.message;
+                    setTimeout(() => { isScanning = false; res.style.display = 'none'; }, 3000);
+                }
+            })
+            .catch(() => {
+                isScanning = false;
+                res.style.display = 'none';
+            });
+        });
+    });
+</script>
+@endif
 @endsection
