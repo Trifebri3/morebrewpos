@@ -111,32 +111,16 @@
                 <!-- 1. IDENTIFIKASI KARYAWAN (NAMA ATAU ID) -->
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">1. Pilih / Masukkan Nama Pegawai</label>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">1. Masukkan Nama atau ID Pegawai</label>
                         <span id="validation-pill" class="text-[11px] font-bold text-slate-400">Verifikasi Wajib</span>
                     </div>
-
-                    @if(isset($karyawans) && count($karyawans) > 0)
-                    <!-- Dropdown Pilihan Cepat Pegawai -->
-                    <div class="relative mb-2">
-                        <select id="employee-dropdown" 
-                                onchange="selectEmployeeFromDropdown(this)"
-                                class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-black transition cursor-pointer">
-                            <option value="">-- Pilih dari Daftar Pegawai (1-Klik) --</option>
-                            @foreach($karyawans as $k)
-                                <option value="{{ $k->name }}" data-id="{{ $k->id }}">
-                                    {{ $k->name }} ({{ $k->position ?: ($k->role === 'admin' ? 'Administrator' : 'Staf Kedai') }} • ID: #{{ $k->id }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
 
                     <!-- Input Nama atau ID Tunggal -->
                     <div class="relative">
                         <input type="text" 
                                id="identifier" 
                                class="w-full bg-white border-2 border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-black transition" 
-                               placeholder="Atau ketik Nama (cth: Bila, ajay) atau ID (cth: 5)..." 
+                               placeholder="Ketik Nama (cth: Bila, ajay) atau ID (cth: 5)..." 
                                autocomplete="off"
                                required>
                         
@@ -144,26 +128,6 @@
                             <svg class="w-4 h-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </div>
                     </div>
-
-                    <!-- Quick Tap Chip List (Semua Karyawan: Bila, ajay, Ale, Beta, Admin, dll) -->
-                    @if(isset($karyawans) && count($karyawans) > 0)
-                    <div class="mt-2.5">
-                        <div class="text-[11px] font-bold uppercase text-slate-400 mb-1.5 flex items-center justify-between">
-                            <span>Atau Sentuh Cepat Nama:</span>
-                            <span class="text-[10px] text-slate-400">1-Sentuh</span>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pb-1">
-                            @foreach($karyawans as $k)
-                                <button type="button" 
-                                        onclick="selectEmployeeChip('{{ addslashes($k->name) }}', '{{ $k->id }}')" 
-                                        class="employee-chip px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-bold hover:bg-black hover:text-white hover:border-black active:scale-95 transition"
-                                        id="chip-emp-{{ $k->id }}">
-                                    {{ $k->name }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
 
                     <!-- KOTAK STATUS: JIKA VALID (HIJAU ✓) -->
                     <div id="user-valid-box" class="mt-3 p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-500/80 text-emerald-950 hidden">
@@ -437,50 +401,7 @@
         // Initialize default selection
         selectType('Masuk');
 
-        // 4. Employee Selection & Real-time Live Validation (Valid vs Ditolak)
-        function selectEmployeeFromDropdown(dropdown) {
-            const val = dropdown.value;
-            if (val) {
-                identifierInput.value = val;
-                const selectedOpt = dropdown.options[dropdown.selectedIndex];
-                const empId = selectedOpt.getAttribute('data-id');
-                if (empId) {
-                    highlightChip(empId);
-                }
-                checkEmployeeStatus(val);
-            } else {
-                identifierInput.value = '';
-                resetValidationState();
-            }
-        }
-
-        function highlightChip(id) {
-            document.querySelectorAll('.employee-chip').forEach(c => {
-                c.classList.remove('bg-black', 'text-white', 'border-black');
-                c.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
-            });
-            const activeChip = document.getElementById('chip-emp-' + id);
-            if (activeChip) {
-                activeChip.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
-                activeChip.classList.add('bg-black', 'text-white', 'border-black');
-            }
-        }
-
-        function selectEmployeeChip(name, id) {
-            identifierInput.value = name;
-            const dropdown = document.getElementById('employee-dropdown');
-            if (dropdown) {
-                for (let i = 0; i < dropdown.options.length; i++) {
-                    if (dropdown.options[i].getAttribute('data-id') == id || dropdown.options[i].value === name) {
-                        dropdown.selectedIndex = i;
-                        break;
-                    }
-                }
-            }
-            highlightChip(id);
-            checkEmployeeStatus(name);
-        }
-
+        // 4. Employee Input & Real-time Live Validation (Valid vs Ditolak)
         let checkTimeout;
         identifierInput.addEventListener('input', function() {
             clearTimeout(checkTimeout);
@@ -492,7 +413,7 @@
             document.getElementById('identifier-spinner').classList.remove('hidden');
             checkTimeout = setTimeout(() => {
                 checkEmployeeStatus(val);
-            }, 350);
+            }, 300);
         });
 
         async function checkEmployeeStatus(identifier) {
@@ -516,18 +437,6 @@
                     // KONDISI VALID (HIJAU ✓)
                     isEmployeeValid = true;
                     validatedIdentifier = identifier;
-
-                    // Sync Dropdown jika belum sama
-                    const dropdown = document.getElementById('employee-dropdown');
-                    if (dropdown) {
-                        for (let i = 0; i < dropdown.options.length; i++) {
-                            if (dropdown.options[i].getAttribute('data-id') == result.user_id || dropdown.options[i].value.toLowerCase() === result.name.toLowerCase()) {
-                                dropdown.selectedIndex = i;
-                                break;
-                            }
-                        }
-                    }
-                    highlightChip(result.user_id);
 
                     // Update UI state to Valid
                     identifierInput.classList.remove('border-rose-500', 'border-slate-200');
@@ -589,15 +498,6 @@
                     isEmployeeValid = false;
                     validatedIdentifier = '';
 
-                    const dropdown = document.getElementById('employee-dropdown');
-                    if (dropdown) {
-                        dropdown.value = '';
-                    }
-                    document.querySelectorAll('.employee-chip').forEach(c => {
-                        c.classList.remove('bg-black', 'text-white', 'border-black');
-                        c.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
-                    });
-
                     identifierInput.classList.remove('border-emerald-500', 'border-slate-200');
                     identifierInput.classList.add('border-rose-500');
 
@@ -624,15 +524,6 @@
         function resetValidationState() {
             isEmployeeValid = false;
             validatedIdentifier = '';
-
-            const dropdown = document.getElementById('employee-dropdown');
-            if (dropdown) {
-                dropdown.value = '';
-            }
-            document.querySelectorAll('.employee-chip').forEach(c => {
-                c.classList.remove('bg-black', 'text-white', 'border-black');
-                c.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
-            });
 
             identifierInput.classList.remove('border-emerald-500', 'border-rose-500');
             identifierInput.classList.add('border-slate-200');
