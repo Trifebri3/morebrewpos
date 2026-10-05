@@ -104,3 +104,22 @@ test('kasir can access absensi clock in out kiosk', function () {
     $response = $this->actingAs($this->kasir)->get(route('kasir.absensi'));
     $response->assertStatus(200);
 });
+
+test('admin can access dashboard and fetch realtime metrics json', function () {
+    $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+    $response->assertStatus(200);
+    $response->assertSee('Dashboard Admin Kedai');
+    $response->assertSee('LIVE REALTIME');
+
+    $realtimeResponse = $this->actingAs($this->admin)->get(route('admin.dashboard.realtime'));
+    $realtimeResponse->assertStatus(200)
+        ->assertJsonStructure([
+            'omzetHariIni',
+            'omzetHariIniFormatted',
+            'transaksiHariIni',
+            'kasirBertugas',
+            'stokMenipis',
+            'transaksiTerkini',
+            'lastUpdated',
+        ]);
+});

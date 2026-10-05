@@ -2,7 +2,11 @@
 
 namespace App\Services\Superadmin;
 
+use App\Models\Kedai;
+use App\Models\Produk;
+use App\Models\Transaksi;
 use App\Models\User;
+use Carbon\Carbon;
 
 class DashboardService
 {
@@ -10,9 +14,23 @@ class DashboardService
     {
         $dummyUser = User::where('role', 'superadmin')->first();
 
+        $totalKedai = Kedai::where('is_active', true)->count();
+        $totalOmzetHariIni = (float) Transaksi::whereDate('created_at', Carbon::today())->where('is_refunded', false)->sum('total');
+        $totalTransaksi = Transaksi::where('is_refunded', false)->count();
+        $stokMenipis = Produk::where('is_active', true)->where('stock', '<=', 5)->count();
+
+        $latestActivities = Transaksi::latest()->take(5)->get()->map(function ($t) {
+            return "[Penjualan] Transaksi #{$t->invoice_number} senilai Rp ".number_format($t->total, 0, ',', '.').' ('.($t->payment_method ?: 'Tunai').') - '.$t->created_at->format('H:i').' WIB';
+        })->toArray();
+
         return [
             'role' => 'Superadmin',
             'dummyUser' => $dummyUser ? $dummyUser->name : 'Superadmin',
+            'totalKedai' => $totalKedai,
+            'totalOmzetHariIni' => 'Rp '.number_format($totalOmzetHariIni, 0, ',', '.'),
+            'totalTransaksi' => $totalTransaksi,
+            'stokMenipis' => $stokMenipis,
+            'latestActivities' => $latestActivities,
             'navGroups' => [
                 'Main Menu' => [
                     ['label' => 'Dashboard', 'url' => route('superadmin.dashboard'), 'active' => request()->routeIs('superadmin.dashboard')],
@@ -41,16 +59,6 @@ class DashboardService
                     ['label' => 'Pajak & Service Charge', 'url' => route('superadmin.pengaturan.pajak'), 'active' => request()->routeIs('superadmin.pengaturan.pajak')],
                     ['label' => 'Sistem QR', 'url' => route('superadmin.pengaturan.qr'), 'active' => request()->routeIs('superadmin.pengaturan.qr')],
                 ],
-            ],
-            'products' => [
-                ['name' => 'Item 1', 'price' => '1.99'],
-                ['name' => 'Item 2', 'price' => '2.69'],
-                ['name' => 'Item 3', 'price' => '3.21'],
-                ['name' => 'Item 4', 'price' => '0.99'],
-                ['name' => 'Item 5', 'price' => '2.11'],
-                ['name' => 'Item 6', 'price' => '0.23'],
-                ['name' => 'Item 7', 'price' => '1.23'],
-                ['name' => 'Item 8', 'price' => '4.21'],
             ],
         ];
     }
