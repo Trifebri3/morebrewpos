@@ -5,10 +5,6 @@
     .card { background: white; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 2px 6px rgba(0,0,0,0.03); overflow: hidden; margin-bottom: 24px; }
     .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
     .card-title { font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0; }
-    
-    .status-alert { margin-top: 16px; padding: 16px; border-radius: 8px; display: none; font-size: 14px; font-weight: 600; text-align: center; }
-    .status-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; display: block; }
-    .status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; display: block; }
 
     .table-container { width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
@@ -23,81 +19,57 @@
     .status-text { font-size: 13px; font-weight: 600; }
     .status-tepat { color: #16a34a; }
     .status-telat { color: #dc2626; }
-    
-    .filter-btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none; border: 1px solid var(--border-color); color: #4b5563; background: white; transition: all 0.2s; }
-    .filter-btn.active, .filter-btn:hover { background: #000000; color: white; border-color: #000000; }
-    
+
     .btn-export { background: #166534; color: white; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; transition: background 0.2s; }
     .btn-export:hover { background: #14532d; }
     
     .photo-thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; border: 2px solid #e2e8f0; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
     .photo-thumb:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    
-    /* Modal */
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
-    .modal-content { background: white; border-radius: 16px; max-width: 520px; width: 100%; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease-out; }
-    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-content { background: white; border-radius: 16px; max-width: 520px; width: 100%; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
 </style>
 
 <div style="padding: 24px 32px 40px;">
-    <!-- Page Title & Header -->
+    <!-- Title & Export -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
-            <h1 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 6px 0;">Rekapan Absensi & Kehadiran Karyawan</h1>
-            <p style="font-size: 13px; color: #64748b; margin: 0;">Pantau kehadiran staff, bukti foto selfie, lokasi GPS, dan unduh laporan ke format Excel.</p>
+            <h1 style="font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 6px 0;">Laporan & Rekapitulasi Staff</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Laporan absensi, kedisiplinan jam kerja, bukti foto swafoto, dan ekspor ke Excel.</p>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <a href="{{ route('admin.staff.absensi.export', request()->query()) }}" class="btn-export">
+        <div>
+            <a href="{{ route('admin.laporan.staff.export', request()->query()) }}" class="btn-export">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Ekspor Excel (.xlsx)
             </a>
-            <a href="#pengaturan-section" style="padding: 9px 16px; background: white; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; color: #374151; display: inline-flex; align-items: center; gap: 6px;">
-                ⚙️ Pengaturan Absensi
-            </a>
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="status-alert status-success" style="display: block; margin-bottom: 20px;">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <!-- KPI Stats Cards -->
+    <!-- KPI Summary Cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
         <div class="card" style="padding: 20px; margin-bottom: 0; border-left: 4px solid #2563eb;">
-            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Total Data Absensi</div>
-            <div style="font-size: 26px; font-weight: 800; color: #1e293b;">{{ $filterStats['total'] ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Record</span></div>
+            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Total Kehadiran</div>
+            <div style="font-size: 26px; font-weight: 800; color: #1e293b;">{{ $totalAbsen ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Record</span></div>
         </div>
         <div class="card" style="padding: 20px; margin-bottom: 0; border-left: 4px solid #16a34a;">
             <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Tepat Waktu</div>
-            <div style="font-size: 26px; font-weight: 800; color: #166534;">{{ $filterStats['tepat_waktu'] ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Hadir</span></div>
+            <div style="font-size: 26px; font-weight: 800; color: #166534;">{{ $totalTepatWaktu ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Kali</span></div>
         </div>
         <div class="card" style="padding: 20px; margin-bottom: 0; border-left: 4px solid #dc2626;">
             <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Terlambat</div>
-            <div style="font-size: 26px; font-weight: 800; color: #991b1b;">{{ $filterStats['terlambat'] ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Staff</span></div>
+            <div style="font-size: 26px; font-weight: 800; color: #991b1b;">{{ $totalTerlambat ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Kali</span></div>
         </div>
         <div class="card" style="padding: 20px; margin-bottom: 0; border-left: 4px solid #8b5cf6;">
-            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Dengan Bukti Foto</div>
-            <div style="font-size: 26px; font-weight: 800; color: #6d28d9;">{{ $filterStats['dengan_foto'] ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Selfie</span></div>
+            <div style="font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Foto Terverifikasi</div>
+            <div style="font-size: 26px; font-weight: 800; color: #6d28d9;">{{ $totalDenganFoto ?? 0 }} <span style="font-size: 14px; font-weight: 500; color: #64748b;">Foto</span></div>
         </div>
     </div>
 
-    <!-- Filter Bar Card -->
+    <!-- Filter Form -->
     <div class="card" style="padding: 20px; margin-bottom: 24px;">
-        <form method="GET" action="{{ route('admin.staff.absensi') }}" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+        <form method="GET" action="{{ route('admin.laporan.staff') }}" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
             <div>
-                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Periode Presets</label>
-                <div style="display: flex; gap: 6px;">
-                    <a href="{{ route('admin.staff.absensi', array_merge(request()->except(['range', 'start_date', 'end_date']), ['range' => 'hari_ini'])) }}" class="filter-btn {{ $range === 'hari_ini' ? 'active' : '' }}">Hari Ini</a>
-                    <a href="{{ route('admin.staff.absensi', array_merge(request()->except(['range', 'start_date', 'end_date']), ['range' => '7_hari'])) }}" class="filter-btn {{ $range === '7_hari' ? 'active' : '' }}">7 Hari</a>
-                    <a href="{{ route('admin.staff.absensi', array_merge(request()->except(['range', 'start_date', 'end_date']), ['range' => 'bulan_ini'])) }}" class="filter-btn {{ $range === 'bulan_ini' ? 'active' : '' }}">Bulan Ini</a>
-                    <a href="{{ route('admin.staff.absensi', array_merge(request()->except(['range', 'start_date', 'end_date']), ['range' => 'semua'])) }}" class="filter-btn {{ $range === 'semua' ? 'active' : '' }}">Semua</a>
-                </div>
-            </div>
-
-            <div>
-                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Karyawan</label>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Pilih Karyawan</label>
                 <select name="user_id" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; min-width: 160px;">
                     <option value="">Semua Karyawan</option>
                     @foreach($users as $u)
@@ -107,12 +79,12 @@
             </div>
 
             <div>
-                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Status</label>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Status Kehadiran</label>
                 <select name="status" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; min-width: 140px;">
                     <option value="">Semua Status</option>
-                    <option value="tepat_waktu" {{ $statusFilter === 'tepat_waktu' ? 'selected' : '' }}>Tepat Waktu</option>
-                    <option value="terlambat" {{ $statusFilter === 'terlambat' ? 'selected' : '' }}>Terlambat</option>
-                    <option value="luar_zona" {{ $statusFilter === 'luar_zona' ? 'selected' : '' }}>Luar Zona</option>
+                    <option value="tepat_waktu" {{ $status === 'tepat_waktu' ? 'selected' : '' }}>Tepat Waktu</option>
+                    <option value="terlambat" {{ $status === 'terlambat' ? 'selected' : '' }}>Terlambat</option>
+                    <option value="luar_zona" {{ $status === 'luar_zona' ? 'selected' : '' }}>Luar Zona</option>
                 </select>
             </div>
 
@@ -126,21 +98,19 @@
                 <input type="date" name="end_date" value="{{ $endDate }}" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px;">
             </div>
 
-            <input type="hidden" name="range" value="custom">
-
             <div>
                 <button type="submit" style="padding: 9px 20px; background: #000000; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
-                    Terapkan Filter
+                    Filter Data
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- Table of Attendance -->
+    <!-- Table of Records -->
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Daftar Rekap Absensi ({{ $absensis->count() }} Data)</h2>
-            <span style="font-size: 13px; color: var(--text-muted);">Klik foto selfie untuk melihat hasil & koordinat peta</span>
+            <h2 class="card-title">Data Log Absensi Karyawan</h2>
+            <span style="font-size: 13px; color: var(--text-muted);">{{ $absensis->count() }} Data Ditemukan</span>
         </div>
 
         <div class="table-container">
@@ -149,9 +119,9 @@
                     <tr>
                         <th>Waktu & Tanggal</th>
                         <th>Foto Selfie</th>
-                        <th>Karyawan</th>
+                        <th>Nama Staff</th>
                         <th>Tipe Absen</th>
-                        <th>Status Kehadiran</th>
+                        <th>Status</th>
                         <th>Lokasi GPS</th>
                         <th>Aksi</th>
                     </tr>
@@ -165,10 +135,8 @@
                         </td>
                         <td>
                             @if($a->photo_path)
-                                @php
-                                    $photoUrl = Storage::url($a->photo_path);
-                                @endphp
-                                <img src="{{ $photoUrl }}" alt="Foto Selfie" class="photo-thumb" 
+                                @php $photoUrl = Storage::url($a->photo_path); @endphp
+                                <img src="{{ $photoUrl }}" alt="Selfie" class="photo-thumb" 
                                      onclick="openPhotoModal('{{ $photoUrl }}', '{{ addslashes($a->user ? $a->user->name : 'Staff') }}', '{{ $a->created_at->format('d M Y H:i:s') }}', '{{ $a->type }}', '{{ addslashes($a->status) }}', '{{ $a->latitude }}', '{{ $a->longitude }}')"
                                      onerror="this.src='https://placehold.co/80x80/f1f5f9/64748b?text=Foto'">
                             @else
@@ -194,7 +162,6 @@
                         <td>
                             @if($a->latitude && $a->longitude)
                                 <a href="https://maps.google.com/?q={{ $a->latitude }},{{ $a->longitude }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: #eff6ff; border-radius: 6px; font-size: 12px; font-weight: 600; color: #1d4ed8; text-decoration: none;">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                     {{ round($a->latitude, 4) }}, {{ round($a->longitude, 4) }}
                                 </a>
                             @else
@@ -214,91 +181,12 @@
                     @empty
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 48px; color: #64748b;">
-                            Tidak ditemukan data absensi untuk filter yang dipilih.
+                            Tidak ditemukan data absensi untuk filter ini.
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- Section Pengaturan Tipe Absensi -->
-    <div id="pengaturan-section" class="card" style="margin-top: 40px;">
-        <div class="card-header">
-            <h2 class="card-title">Pengaturan Tipe & Lokasi Geofencing Absensi</h2>
-        </div>
-        <div style="padding: 24px;">
-            <form action="{{ route('admin.staff.absensi.settings.update') }}" method="POST">
-                @csrf
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                            <div>
-                                <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #111827;">Absen Via QR Code (Kasir)</h3>
-                                <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Karyawan scan kartu QR mereka di layar POS Kasir untuk Clock In / Out.</p>
-                            </div>
-                            <label style="position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0;">
-                                <input type="checkbox" name="is_qr_absen_enabled" value="1" {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? 'checked' : '' }} style="opacity: 0; width: 0; height: 0;">
-                                <span style="position: absolute; cursor: pointer; inset: 0; background-color: {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? '#000000' : '#ccc' }}; transition: .3s; border-radius: 34px;">
-                                    <span style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; transform: {{ (isset($kedai) && $kedai->is_qr_absen_enabled) ? 'translateX(22px)' : 'translateX(0)' }};"></span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                            <div>
-                                <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #111827;">Absen Via Tautan HP (GPS + Selfie)</h3>
-                                <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Staff akses link mandiri di smartphone mereka, ambil foto selfie dan validasi geofencing lokasi kedai.</p>
-                                <div style="margin-top: 10px; font-family: monospace; font-size: 12px; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 6px 10px; border-radius: 6px;">
-                                    {{ url('/absen') }}
-                                </div>
-                            </div>
-                            <label style="position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0;">
-                                <input type="checkbox" name="is_link_absen_enabled" value="1" {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'checked' : '' }} style="opacity: 0; width: 0; height: 0;">
-                                <span style="position: absolute; cursor: pointer; inset: 0; background-color: {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? '#000000' : '#ccc' }}; transition: .3s; border-radius: 34px;">
-                                    <span style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; transform: {{ (isset($kedai) && $kedai->is_link_absen_enabled) ? 'translateX(22px)' : 'translateX(0)' }};"></span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 20px; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <div>
-                            <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #111827;">Titik Lokasi Kedai & Radius Absensi</h3>
-                            <p style="margin: 0; font-size: 12.5px; color: #64748b;">Batas toleransi jarak karyawan saat melakukan absensi selfie.</p>
-                        </div>
-                        <a href="{{ route('admin.kedai.pengaturan') }}" style="background: #000000; color: white; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                            🗺️ Buka Peta Interaktif Kedai
-                        </a>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                        <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Latitude</label>
-                            <input type="text" name="latitude" value="{{ $kedai->latitude ?? '' }}" placeholder="Contoh: -6.921477" style="width: 100%; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px;">
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Longitude</label>
-                            <input type="text" name="longitude" value="{{ $kedai->longitude ?? '' }}" placeholder="Contoh: 107.616654" style="width: 100%; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px;">
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Radius Geofencing (Meter)</label>
-                            <input type="number" name="radius_meter" value="{{ $kedai->radius_meter ?? 50 }}" placeholder="50" style="width: 100%; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 20px; text-align: right;">
-                    <button type="submit" style="background: #000000; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
-                        Simpan Pengaturan Absensi
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

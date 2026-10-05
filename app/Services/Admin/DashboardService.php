@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services\Admin;
+
 use App\Models\User;
 
 class DashboardService
@@ -8,7 +9,7 @@ class DashboardService
     public function getDashboardData(): array
     {
         $dummyUser = User::where('role', 'admin')->first();
-        
+
         return [
             'role' => 'Admin Kedai',
             'dummyUser' => $dummyUser ? $dummyUser->name : 'Admin',
@@ -32,7 +33,6 @@ class DashboardService
                 ],
                 'Kedai' => [
                     ['label' => 'Meja', 'url' => route('admin.kedai.meja.index'), 'active' => request()->routeIs('admin.kedai.meja.*')],
-                    ['label' => 'Printer', 'url' => route('admin.kedai.printer'), 'active' => request()->routeIs('admin.kedai.printer')],
                     ['label' => 'Pengaturan Kedai', 'url' => route('admin.kedai.pengaturan'), 'active' => request()->routeIs('admin.kedai.pengaturan')],
                 ],
                 'Staff' => [
@@ -59,7 +59,7 @@ class DashboardService
                 ['name' => 'Item 6', 'price' => '0.23'],
                 ['name' => 'Item 7', 'price' => '1.23'],
                 ['name' => 'Item 8', 'price' => '4.21'],
-            ]
+            ],
         ];
     }
 }

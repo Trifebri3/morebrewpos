@@ -22,9 +22,39 @@
             <h1 style="font-size: 24px; margin-bottom: 4px;">Laporan Harian Pengeluaran</h1>
             <p style="color: var(--text-muted); font-size: 14px;">Rekapitulasi total uang keluar setiap harinya.</p>
         </div>
-        <div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="{{ route('admin.laporan.pengeluaran.export', request()->query()) }}" style="background: #166534; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Ekspor Excel (.xlsx)
+            </a>
             <a href="{{ route('admin.operasional.pengeluaran.index') }}" style="background: var(--text-main); color: white; padding: 10px 16px; border-radius: 8px; font-size: 14px; text-decoration: none; font-weight: 500;">Validasi Pengeluaran</a>
         </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card" style="padding: 16px 24px; margin-bottom: 24px;">
+        <form method="GET" action="{{ route('admin.laporan.pengeluaran') }}" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Tanggal Mulai</label>
+                <input type="date" name="start_date" value="{{ $startDate ?? '' }}" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Tanggal Selesai</label>
+                <input type="date" name="end_date" value="{{ $endDate ?? '' }}" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px;">
+            </div>
+            <div>
+                <button type="submit" style="padding: 9px 18px; background: #000000; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    Filter
+                </button>
+            </div>
+            @if(request('start_date') || request('end_date'))
+            <div>
+                <a href="{{ route('admin.laporan.pengeluaran') }}" style="padding: 9px 14px; background: #f1f5f9; color: #475569; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block;">
+                    Reset
+                </a>
+            </div>
+            @endif
+        </form>
     </div>
 
     <div class="card">

@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\VoucherUsageExport;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Voucher;
+use App\Services\Admin\DashboardService;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VoucherController extends Controller
 {
     protected function getViewData($title = 'Voucher Promo')
     {
-        $dashboardService = app(\App\Services\Admin\DashboardService::class);
+        $dashboardService = app(DashboardService::class);
         $data = $dashboardService->getDashboardData();
         $data['title'] = $title;
+
         return $data;
     }
 
@@ -20,12 +24,14 @@ class VoucherController extends Controller
     {
         $data = $this->getViewData('Daftar Voucher');
         $vouchers = Voucher::where('kedai_id', auth()->user()->kedai_id)->latest()->get();
+
         return view('admin.voucher.index', compact('data', 'vouchers'));
     }
 
     public function create()
     {
         $data = $this->getViewData('Tambah Voucher');
+
         return view('admin.voucher.create', compact('data'));
     }
 
@@ -51,30 +57,51 @@ class VoucherController extends Controller
         $validated['status'] = $request->has('status');
 
         Voucher::create($validated);
+
         return redirect()->route('admin.penjualan.voucher.index')->with('success', 'Voucher berhasil ditambahkan.');
     }
 
     public function edit(Voucher $voucher)
     {
-        if ($voucher->kedai_id != auth()->user()->kedai_id) abort(403);
+        if ($voucher->kedai_id != auth()->user()->kedai_id) {
+            abort(403);
+        }
         $data = $this->getViewData('Edit Voucher');
+
         return view('admin.voucher.edit', compact('data', 'voucher'));
     }
 
     public function show(Voucher $voucher)
     {
-        if ($voucher->kedai_id != auth()->user()->kedai_id) abort(403);
+        if ($voucher->kedai_id != auth()->user()->kedai_id) {
+            abort(403);
+        }
         $data = $this->getViewData('Detail Penggunaan Voucher');
         $transaksis = $voucher->transaksis()->latest()->get();
+
         return view('admin.voucher.show', compact('data', 'voucher', 'transaksis'));
+    }
+
+    public function exportUsage(Voucher $voucher)
+    {
+        if ($voucher->kedai_id != auth()->user()->kedai_id) {
+            abort(403);
+        }
+
+        return Excel::download(
+            new VoucherUsageExport($voucher),
+            'penggunaan_voucher_'.$voucher->kode.'_'.date('YmdHis').'.xlsx'
+        );
     }
 
     public function update(Request $request, Voucher $voucher)
     {
-        if ($voucher->kedai_id != auth()->user()->kedai_id) abort(403);
+        if ($voucher->kedai_id != auth()->user()->kedai_id) {
+            abort(403);
+        }
 
         $validated = $request->validate([
-            'kode' => 'required|string|max:50|unique:vouchers,kode,' . $voucher->id,
+            'kode' => 'required|string|max:50|unique:vouchers,kode,'.$voucher->id,
             'nama' => 'required|string|max:100',
             'tipe_diskon' => 'required|in:persen,nominal',
             'nilai_diskon' => 'required|numeric|min:0',
@@ -89,20 +116,24 @@ class VoucherController extends Controller
             'status' => 'boolean',
         ]);
 
-        if (!$request->has('hari_berlaku')) {
+        if (! $request->has('hari_berlaku')) {
             $validated['hari_berlaku'] = null;
         }
 
         $validated['status'] = $request->has('status');
 
         $voucher->update($validated);
+
         return redirect()->route('admin.penjualan.voucher.index')->with('success', 'Voucher berhasil diperbarui.');
     }
 
     public function destroy(Voucher $voucher)
     {
-        if ($voucher->kedai_id != auth()->user()->kedai_id) abort(403);
+        if ($voucher->kedai_id != auth()->user()->kedai_id) {
+            abort(403);
+        }
         $voucher->delete();
+
         return redirect()->route('admin.penjualan.voucher.index')->with('success', 'Voucher berhasil dihapus.');
     }
 }

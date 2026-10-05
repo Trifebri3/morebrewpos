@@ -86,18 +86,31 @@
         .nav-link {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
+            gap: 12px;
+            padding: 10px 14px;
             border-radius: var(--radius-md);
-            color: var(--text-muted);
+            color: #374151;
             text-decoration: none;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13.5px;
             transition: all 0.2s ease;
         }
 
+        .nav-link svg {
+            stroke: #000000 !important;
+            color: #000000 !important;
+            flex-shrink: 0;
+            transition: transform 0.15s ease;
+        }
+
         .nav-link:hover, .nav-link.active {
-            color: var(--text-main);
-            background-color: var(--bg-color);
+            color: #000000;
+            font-weight: 600;
+            background-color: #f1f5f9;
+        }
+
+        .nav-link:hover svg, .nav-link.active svg {
+            transform: scale(1.08);
         }
 
         .user-info {

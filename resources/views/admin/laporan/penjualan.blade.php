@@ -19,6 +19,10 @@
         <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">{{ $data['subtitle'] ?? '' }}</p>
     </div>
     <div style="display: flex; gap: 12px; align-items: center;">
+        <a href="{{ route('admin.laporan.penjualan.export', request()->query()) }}" style="padding: 10px 16px; background: #166534; color: white; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Ekspor Excel (.xlsx)
+        </a>
         <a href="{{ route('admin.laporan.penjualan', ['type' => 'harian']) }}" class="btn-secondary {{ $type == 'harian' ? 'active' : '' }}">Laporan Harian</a>
         <a href="{{ route('admin.laporan.penjualan', ['type' => 'bulanan']) }}" class="btn-secondary {{ $type == 'bulanan' ? 'active' : '' }}">Laporan Bulanan</a>
         <a href="{{ route('admin.laporan.penjualan', ['type' => 'lengkap']) }}" class="btn-secondary {{ $type == 'lengkap' ? 'active' : '' }}">Rekapan Lengkap</a>

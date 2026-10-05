@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services\Superadmin;
+
 use App\Models\User;
 
 class DashboardService
@@ -8,7 +9,7 @@ class DashboardService
     public function getDashboardData(): array
     {
         $dummyUser = User::where('role', 'superadmin')->first();
-        
+
         return [
             'role' => 'Superadmin',
             'dummyUser' => $dummyUser ? $dummyUser->name : 'Superadmin',
@@ -17,7 +18,7 @@ class DashboardService
                     ['label' => 'Dashboard', 'url' => route('superadmin.dashboard'), 'active' => request()->routeIs('superadmin.dashboard')],
                 ],
                 'Manajemen Kedai' => [
-                    ['label' => 'Data Kedai', 'url' => route('superadmin.kedai.index'), 'active' => request()->routeIs('superadmin.kedai.*') && !request()->routeIs('superadmin.kedai.performa')],
+                    ['label' => 'Data Kedai', 'url' => route('superadmin.kedai.index'), 'active' => request()->routeIs('superadmin.kedai.*') && ! request()->routeIs('superadmin.kedai.performa')],
                     ['label' => 'Performa Kedai', 'url' => route('superadmin.kedai.performa'), 'active' => request()->routeIs('superadmin.kedai.performa')],
                 ],
                 'Manajemen Akun' => [
@@ -37,7 +38,6 @@ class DashboardService
                 ],
                 'Pengaturan Global' => [
                     ['label' => 'Produk Global', 'url' => route('superadmin.pengaturan.produk'), 'active' => request()->routeIs('superadmin.pengaturan.produk')],
-                    ['label' => 'Pengaturan Printer', 'url' => route('superadmin.pengaturan.printer'), 'active' => request()->routeIs('superadmin.pengaturan.printer')],
                     ['label' => 'Pajak & Service Charge', 'url' => route('superadmin.pengaturan.pajak'), 'active' => request()->routeIs('superadmin.pengaturan.pajak')],
                     ['label' => 'Sistem QR', 'url' => route('superadmin.pengaturan.qr'), 'active' => request()->routeIs('superadmin.pengaturan.qr')],
                 ],
@@ -51,7 +51,7 @@ class DashboardService
                 ['name' => 'Item 6', 'price' => '0.23'],
                 ['name' => 'Item 7', 'price' => '1.23'],
                 ['name' => 'Item 8', 'price' => '4.21'],
-            ]
+            ],
         ];
     }
 }
