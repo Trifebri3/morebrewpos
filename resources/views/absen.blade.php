@@ -84,7 +84,7 @@
             <div class="mt-4 py-2 px-4 bg-slate-50 rounded-2xl border border-slate-200/80 inline-flex items-center gap-3">
                 <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
                     <svg width="14" height="14" fill="none" stroke="#000000" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span>{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</span>
+                    <span id="live-date">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</span>
                 </div>
                 <div class="h-3 w-[1px] bg-slate-300"></div>
                 <div id="live-clock" class="font-mono text-sm font-bold text-slate-900 tracking-wider">--:--:-- WIB</div>
@@ -294,13 +294,27 @@
     </div>
 
     <script>
-        // 1. Live Digital Clock
+        // 1. Live Digital Clock & Auto Midnight Reset
+        let lastDayKey = new Date().toDateString();
+
         function updateLiveClock() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('live-clock').innerText = `${h}:${m}:${s} WIB`;
+
+            // Jika berganti hari / tengah malam (00:00:00), refresh tanggal dan reset status
+            if (now.toDateString() !== lastDayKey) {
+                lastDayKey = now.toDateString();
+                const dateElem = document.getElementById('live-date');
+                if (dateElem) {
+                    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                    dateElem.innerText = now.toLocaleDateString('id-ID', options);
+                }
+                resetValidationState();
+                identifierInput.value = '';
+            }
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
