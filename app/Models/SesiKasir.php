@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class SesiKasir extends Model
 {
     protected $fillable = [
-        'user_id', 'waktu_buka', 'waktu_tutup', 'modal_awal',
-        'total_pendapatan', 'uang_fisik', 'selisih', 'status', 'catatan'
+        'user_id', 'session_number', 'previous_session_id', 'waktu_buka', 'waktu_tutup', 'modal_awal',
+        'total_pendapatan', 'total_cash_sales', 'total_non_cash_sales', 'cash_in', 'cash_out', 'cash_expense',
+        'expected_balance', 'uang_fisik', 'selisih', 'status', 'catatan'
     ];
     
     protected $casts = [

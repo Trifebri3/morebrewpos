@@ -9,7 +9,7 @@
         .receipt { width: 58mm; max-width: 100%; margin: 10px auto; padding: 8px 6px; background: white; box-sizing: border-box; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         @media print {
             body { background: white; display: block; }
-            .receipt { margin: 0; padding: 6px 4px; box-shadow: none; width: 100%; }
+            .receipt { margin: 0; padding: 6px 4px 30px 4px; box-shadow: none; width: 100%; }
         }
         .center { text-align: center; }
         .bold { font-weight: bold; }
@@ -111,7 +111,7 @@
                 <div class="row" style="margin-top: 1px;"><span>Diskon:</span> <span>-Rp {{ number_format($data['discountAmount'] ?? 0, 0, ',', '.') }}</span></div>
             @endif
             @if(($data['tax'] ?? 0) > 0)
-                <div class="row" style="margin-top: 1px;"><span>Pajak 11%:</span> <span>Rp {{ number_format($data['tax'] ?? 0, 0, ',', '.') }}</span></div>
+                <div class="row" style="margin-top: 1px;"><span>Pajak ({{ $kData && $kData->tax_percentage ? (int)$kData->tax_percentage : 11 }}%):</span> <span>Rp {{ number_format($data['tax'] ?? 0, 0, ',', '.') }}</span></div>
             @endif
             <div class="row bold" style="margin-top: 4px; font-size: 12px;"><span>TOTAL:</span> <span>Rp {{ number_format($data['total'] ?? 0, 0, ',', '.') }}</span></div>
         </div>
@@ -135,7 +135,7 @@
                 <div style="flex: 1; padding-right: 4px;">
                     <div style="font-weight: bold; font-size: 8px; margin-bottom: 1px;">Wi-Fi Area</div>
                     <div style="font-size: 7px;">{{ $kData && $kData->wifi_ssid ? $kData->wifi_ssid : 'moreandmore' }}</div>
-                    <div style="font-size: 6.5px; color: #333;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehmintasenyumnya?' }}</div>
+                    <div style="font-size: 6.5px; color: #333;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehlihatsenyumnya?' }}</div>
                 </div>
                 
                 <!-- Divider Vertikal Halus -->
@@ -148,6 +148,8 @@
                 </div>
             </div>
         </div>
+        <!-- Extra Bottom Feed Spacing (Thermal cutter / tear margin) -->
+        <div style="height: 25px;"></div>
     </div>
 </body>
 </html>

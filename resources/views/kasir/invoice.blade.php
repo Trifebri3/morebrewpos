@@ -198,7 +198,7 @@
                     <div style="flex: 1; padding-right: 4px;">
                         <div style="font-weight: bold; font-size: 8px; margin-bottom: 1px;">Wi-Fi Area</div>
                         <div style="font-size: 7.5px;">{{ $kData && $kData->wifi_ssid ? $kData->wifi_ssid : 'moreandmore' }}</div>
-                        <div style="font-size: 7px; color: #444;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehmintasenyumnya?' }}</div>
+                        <div style="font-size: 7px; color: #444;">pass: {{ $kData && $kData->wifi_password ? $kData->wifi_password : 'bolehlihatsenyumnya?' }}</div>
                     </div>
                     <div style="width: 1px; background: #000; align-self: stretch; min-height: 22px; margin: 0 3px;"></div>
                     <div style="flex: 1; padding-left: 4px;">

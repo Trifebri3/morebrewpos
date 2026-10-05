@@ -88,30 +88,11 @@
                     Absen QR
                 </button>
                 @endif
-                <div style="position: relative;">
-                    <button @click="showDrafts = !showDrafts" style="font-size: 13px; font-weight: 600; color: #b45309; background: #fef3c7; padding: 10px 16px; border-radius: 20px; border: 1px solid #fcd34d; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        Draft (<span x-text="drafts.length"></span>)
+                <div>
+                    <button @click="openPendingOrdersModal()" style="font-size: 13px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 10px 16px; border-radius: 20px; border: 1.5px solid #fcd34d; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        Belum Bayar (<span x-text="totalPendingCount"></span>)
                     </button>
-                    
-                    <!-- Draft Dropdown -->
-                    <div x-show="showDrafts" @click.away="showDrafts = false" style="position: absolute; top: 100%; left: 0; margin-top: 12px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 300px; border: 1px solid var(--border-color); overflow: hidden; z-index: 100;" x-cloak>
-                        <div style="padding: 16px; border-bottom: 1px solid var(--border-color); font-weight: 600;">Daftar Transaksi Ditunda</div>
-                        <div style="max-height: 300px; overflow-y: auto;">
-                            <template x-if="drafts.length === 0">
-                                <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">Belum ada pesanan yang di-hold.</div>
-                            </template>
-                            <template x-for="(draft, index) in drafts" :key="draft.id">
-                                <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" @click="loadDraft(index); showDrafts = false;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 14px;" x-text="draft.customerName"></div>
-                                        <div style="font-size: 12px; color: var(--text-muted);" x-text="draft.time + ' - ' + draft.cart.length + ' item'"></div>
-                                    </div>
-                                    <div style="font-weight: 600; color: var(--text-main);" x-text="formatMoney(draft.total)"></div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
                 </div>
                 <div style="position: relative; flex: 1; min-width: 200px;">
                     <input type="text" x-model="searchQuery" placeholder="Cari menu..." style="width: 100%; padding: 10px 16px 10px 36px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 14px; outline: none; box-sizing: border-box;">
@@ -205,7 +186,7 @@
             <div class="summary-row" style="align-items: center;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" x-model="useTax" style="width: 16px; height: 16px; accent-color: var(--text-main);">
-                    <span>Pajak (11%)</span>
+                    <span>Pajak (<span x-text="taxPercentage"></span>%)</span>
                 </label>
                 <span style="font-weight: 500; color: var(--text-main);" x-text="formatMoney(tax)"></span>
             </div>
@@ -216,9 +197,9 @@
             </div>
             
             <div style="display: flex; gap: 8px;">
-                <button type="button" @click="saveDraft()" class="btn-pay" style="flex: 1; background: white; color: var(--text-main); border: 1px solid var(--border-color);" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                    Hold / Draft
+                <button type="button" @click="saveDraft()" class="btn-pay" style="flex: 1; background: white; color: var(--text-main); border: 1px solid var(--border-color);" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" title="Tahan Pesanan (Draft Kasir)">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Tahan (Draft)
                 </button>
                 <button type="button" class="btn-pay" style="flex: 2;" :style="cart.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''" :disabled="cart.length === 0" @click="openCheckout()">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -280,6 +261,96 @@
         </div>
     </div>
     
+    <!-- Modal Pesanan Belum Bayar (Tagihan Meja & Draft Terpadu) -->
+    <div x-show="pendingOrdersModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; display: flex; align-items: center; justify-content: center;" x-cloak>
+        <div style="background: white; width: 680px; max-width: 95vw; max-height: 85vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <!-- Header Modal -->
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <div>
+                    <div style="font-size: 18px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        <span>📋 Pesanan Belum Bayar</span>
+                        <span style="font-size: 11px; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 10px; font-weight: 700;" x-text="totalPendingCount + ' Menunggu'"></span>
+                    </div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Tagihan aktif: Pesanan QR Meja, Bayar di Akhir (Open Tab), & Draft Kasir</div>
+                </div>
+                <button @click="pendingOrdersModal = false" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- Filter & Search Bar -->
+            <div style="padding: 14px 24px; border-bottom: 1px solid var(--border-color); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; background: white;">
+                <div style="display: flex; gap: 6px;">
+                    <button class="pill" :class="{'active': pendingFilter === 'semua'}" @click="pendingFilter = 'semua'" style="font-size: 12px; padding: 6px 12px;">Semua (<span x-text="totalPendingCount"></span>)</button>
+                    <button class="pill" :class="{'active': pendingFilter === 'meja_qr'}" @click="pendingFilter = 'meja_qr'" style="font-size: 12px; padding: 6px 12px;">📱 QR Meja (<span x-text="tableOrdersCount"></span>)</button>
+                    <button class="pill" :class="{'active': pendingFilter === 'draft'}" @click="pendingFilter = 'draft'" style="font-size: 12px; padding: 6px 12px;">📝 Draft Kasir (<span x-text="drafts.length"></span>)</button>
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                    <input type="text" x-model="pendingSearch" placeholder="Cari Nama / No Meja..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; outline: none;">
+                </div>
+                <button @click="fetchPendingTableOrders()" style="background: #f1f5f9; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 500;">
+                    🔄 Refresh
+                </button>
+            </div>
+
+            <!-- List Orders -->
+            <div style="flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+                <template x-if="filteredPendingList.length === 0">
+                    <div style="padding: 40px 20px; text-align: center; color: #94a3b8;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+                        <div style="font-size: 15px; font-weight: 600; color: #334155;">Tidak Ada Pesanan Menunggu</div>
+                        <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Semua pesanan meja telah selesai dibayar atau belum ada draft baru.</div>
+                    </div>
+                </template>
+
+                <template x-for="item in filteredPendingList" :key="item.uniqueId">
+                    <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: white; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+                        <!-- Header Bar Item -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 6px;"
+                                      :style="item.isTableOrder ? 'background: #fef3c7; color: #b45309; border: 1px solid #fde68a;' : 'background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;'"
+                                      x-text="item.tableNumber"></span>
+                                <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: #f8fafc; color: #64748b;" x-text="item.typeLabel"></span>
+                            </div>
+                            <span style="font-size: 12px; color: #94a3b8;" x-text="item.time"></span>
+                        </div>
+
+                        <!-- Info Pelanggan & Invoice -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: 700; font-size: 15px; color: #1e293b;" x-text="item.customerName"></div>
+                            <div style="font-size: 12px; color: #64748b; font-family: monospace;" x-text="'#' + item.invoiceNumber"></div>
+                        </div>
+
+                        <!-- Ringkasan Items -->
+                        <div style="background: #f8fafc; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #475569;">
+                            <template x-for="ci in item.cart" :key="ci.name">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span x-text="ci.qty + 'x ' + ci.name"></span>
+                                    <span style="font-weight: 600;" x-text="formatMoney(ci.price * ci.qty)"></span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Footer Tagihan & Action Buttons -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+                            <div>
+                                <div style="font-size: 11px; color: #94a3b8;">Total Tagihan</div>
+                                <div style="font-size: 17px; font-weight: 800; color: #0f172a;" x-text="formatMoney(item.total)"></div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" @click="loadPendingToCart(item)" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    ✏️ Buka di Kasir
+                                </button>
+                                <button type="button" @click="directPayPending(item)" style="padding: 8px 16px; border-radius: 6px; border: none; background: #10b981; color: white; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(16,185,129,0.2);">
+                                    💳 Bayar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+    
     <!-- Absen QR Modal -->
     <div x-show="showAbsenModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center;" x-cloak>
         <div style="background: white; width: 400px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
@@ -337,12 +408,139 @@
                 return ymd + rand;
             })(),
             
-            // New Features: Draft & Checkout
+            // Pesanan Belum Bayar (Meja QR & Draft)
             drafts: [],
-            showDrafts: false,
+            tableOrders: [],
+            pendingOrdersModal: false,
+            pendingFilter: 'semua',
+            pendingSearch: '',
             checkoutModal: false,
             paymentMethod: 'cash',
             amountPaid: 0,
+            
+            // Tax & Kedai Config
+            taxPercentage: {{ isset($data['kedai']) && $data['kedai']->tax_percentage ? (float)$data['kedai']->tax_percentage : 11 }},
+            useTax: {{ isset($data['kedai']) && $data['kedai']->is_tax_enabled ? 'true' : 'false' }},
+            promoInput: '',
+            discountAmount: 0,
+            appliedVoucherId: null,
+
+            get tableOrdersCount() {
+                return this.tableOrders.length;
+            },
+            get totalPendingCount() {
+                return this.tableOrders.length + this.drafts.length;
+            },
+            get allPendingItems() {
+                const list = [];
+                // 1. Table Orders dari server
+                this.tableOrders.forEach(o => {
+                    const tbl = o.orderType === 'dine_in' ? (o.tableNumber || 'Meja') : 'Takeaway';
+                    list.push({
+                        uniqueId: 'tbl-' + o.invoiceNumber,
+                        invoiceNumber: o.invoiceNumber,
+                        customerName: o.customerName || 'Pelanggan Meja',
+                        customerPhone: o.customerPhone || '',
+                        orderType: o.orderType || 'dine_in',
+                        tableNumber: tbl,
+                        typeLabel: '📱 QR Meja',
+                        isTableOrder: true,
+                        cart: (o.items || []).map(i => ({
+                            id: i.productId || i.id,
+                            name: i.name,
+                            price: i.price,
+                            qty: i.quantity || i.qty || 1
+                        })),
+                        total: o.total || 0,
+                        time: o.createdAt ? new Date(o.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'
+                    });
+                });
+                // 2. Drafts Kasir
+                this.drafts.forEach((d, idx) => {
+                    list.push({
+                        uniqueId: 'draft-' + (d.id || idx),
+                        draftIndex: idx,
+                        invoiceNumber: d.invoiceNumber,
+                        customerName: d.customerName,
+                        customerPhone: d.customerPhone || '',
+                        orderType: d.orderType,
+                        tableNumber: d.tableNumber || 'Draft Kasir',
+                        typeLabel: '📝 Draft Kasir',
+                        isTableOrder: false,
+                        cart: d.cart,
+                        total: d.total,
+                        time: d.time || '-'
+                    });
+                });
+                return list;
+            },
+            get filteredPendingList() {
+                return this.allPendingItems.filter(item => {
+                    if (this.pendingFilter === 'meja_qr' && !item.isTableOrder) return false;
+                    if (this.pendingFilter === 'draft' && item.isTableOrder) return false;
+                    if (this.pendingSearch.trim()) {
+                        const q = this.pendingSearch.toLowerCase();
+                        const matchName = item.customerName.toLowerCase().includes(q);
+                        const matchTable = item.tableNumber.toLowerCase().includes(q);
+                        const matchInv = item.invoiceNumber.toLowerCase().includes(q);
+                        return matchName || matchTable || matchInv;
+                    }
+                    return true;
+                });
+            },
+            
+            init() {
+                this.fetchPendingTableOrders();
+                setInterval(() => {
+                    this.fetchPendingTableOrders();
+                }, 10000);
+            },
+
+            openPendingOrdersModal() {
+                this.pendingOrdersModal = true;
+                this.fetchPendingTableOrders();
+            },
+
+            async fetchPendingTableOrders() {
+                try {
+                    const res = await fetch('{{ route("api.orders.pending") }}');
+                    const json = await res.json();
+                    if (json.status === 'success') {
+                        this.tableOrders = json.data || [];
+                    }
+                } catch(e) {
+                    console.log('Error fetching pending table orders:', e);
+                }
+            },
+
+            loadPendingToCart(item) {
+                if (this.cart.length > 0) {
+                    if (!confirm('Ada item di keranjang yang belum selesai. Ganti dengan pesanan ini?')) return;
+                }
+                this.customerName = item.customerName;
+                this.customerPhone = item.customerPhone;
+                this.orderType = item.orderType;
+                this.cart = JSON.parse(JSON.stringify(item.cart));
+                this.invoiceNumber = item.invoiceNumber;
+                if (!item.isTableOrder && item.draftIndex !== undefined) {
+                    this.drafts.splice(item.draftIndex, 1);
+                }
+                this.pendingOrdersModal = false;
+                this.showNotification('Pesanan berhasil dimuat ke keranjang kasir.', 'success');
+            },
+
+            directPayPending(item) {
+                this.customerName = item.customerName;
+                this.customerPhone = item.customerPhone;
+                this.orderType = item.orderType;
+                this.cart = JSON.parse(JSON.stringify(item.cart));
+                this.invoiceNumber = item.invoiceNumber;
+                if (!item.isTableOrder && item.draftIndex !== undefined) {
+                    this.drafts.splice(item.draftIndex, 1);
+                }
+                this.pendingOrdersModal = false;
+                this.openCheckout();
+            },
             
             // Absen QR
             showAbsenModal: false,
@@ -403,12 +601,6 @@
                 }, 3000);
             },
             
-            // Tax & Promo
-            useTax: true,
-            promoInput: '',
-            discountAmount: 0,
-            appliedVoucherId: null,
-            
             // Notification System
             toastMessage: '',
             toastType: 'success',
@@ -438,7 +630,7 @@
             get tax() {
                 if (!this.useTax) return 0;
                 const afterDiscount = Math.max(0, this.subtotal - this.discountAmount);
-                return afterDiscount * 0.11; // 11% tax applied to amount after discount
+                return afterDiscount * (this.taxPercentage / 100);
             },
             
             get total() {

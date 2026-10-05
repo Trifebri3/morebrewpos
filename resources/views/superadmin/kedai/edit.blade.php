@@ -319,7 +319,7 @@
                     </div>
                     <div class="form-group">
                         <label for="wifi_password">Password Wi-Fi</label>
-                        <input type="text" name="wifi_password" id="wifi_password" value="{{ old('wifi_password', $kedai->wifi_password) }}" class="input-control" placeholder="Contoh: bolehmintasenyumnya?">
+                        <input type="text" name="wifi_password" id="wifi_password" value="{{ old('wifi_password', $kedai->wifi_password) }}" class="input-control" placeholder="Contoh: bolehlihatsenyumnya?">
                     </div>
                     <div class="form-group">
                         <label for="instagram">Instagram</label>

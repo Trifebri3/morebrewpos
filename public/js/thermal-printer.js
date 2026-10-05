@@ -207,7 +207,7 @@ class ThermalPrinter {
 
         if (window.kedaiInfo) {
             let wifiSsid = window.kedaiInfo.wifiSsid || 'moreandmore';
-            let wifiPass = window.kedaiInfo.wifiPassword || 'bolehmintasenyumnya?';
+            let wifiPass = window.kedaiInfo.wifiPassword || 'bolehlihatsenyumnya?';
             let igHandle = window.kedaiInfo.instagram || 'morebrewcoffee';
             if (igHandle.startsWith('@')) igHandle = igHandle.substring(1);
 
@@ -227,7 +227,8 @@ class ThermalPrinter {
             receiptText += "\x1B\x4D\x00"; // Font A (normal font)
         }
 
-        receiptText += "\n\n";
+        // Margin bawah ekstra (4 baris feed) agar tidak terpotong pisau cutter
+        receiptText += "\n\n\n\n";
 
         // Feed & Cut
         receiptText += "\x1D\x56\x41\x10";

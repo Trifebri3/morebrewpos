@@ -312,7 +312,7 @@
                     </div>
                     <div class="form-group">
                         <label for="phone">No. WhatsApp / Telepon</label>
-                        <input type="text" name="phone" id="phone" value="{{ old('phone', $kedai->phone ?? '081234567890') }}" class="input-control" placeholder="Contoh: 0812-3456-7890">
+                        <input type="text" name="phone" id="phone" value="{{ old('phone', $kedai->phone ?? '') }}" class="input-control" placeholder="Contoh: 0812-3456-7890">
                     </div>
                 </div>
 
@@ -329,7 +329,7 @@
                     </div>
                     <div class="form-group">
                         <label for="wifi_password">Password Wi-Fi</label>
-                        <input type="text" name="wifi_password" id="wifi_password" value="{{ old('wifi_password', $kedai->wifi_password ?? 'bolehmintasenyumnya?') }}" class="input-control" placeholder="Password Wi-Fi">
+                        <input type="text" name="wifi_password" id="wifi_password" value="{{ old('wifi_password', $kedai->wifi_password ?? 'bolehlihatsenyumnya?') }}" class="input-control" placeholder="Password Wi-Fi">
                     </div>
                     <div class="form-group">
                         <label for="instagram">Akun Instagram</label>

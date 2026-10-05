@@ -30,10 +30,10 @@ class SyncController extends Controller
             $kedai = Kedai::create([
                 'name' => 'MOREBREWW',
                 'address' => 'Jl. Sasmitatmaja No.6, Paledang, Kec. Lengkong, Kota Bandung, Jawa Barat 40261',
-                'phone' => '0812-3456-7890',
+                'phone' => '',
                 'is_active' => true,
                 'wifi_ssid' => 'moreandmore',
-                'wifi_password' => 'bolehmintasenyumnya?',
+                'wifi_password' => 'bolehlihatsenyumnya?',
                 'instagram' => 'morebrewcoffee',
             ]);
         } else {
@@ -124,12 +124,38 @@ class SyncController extends Controller
                 'change' => max(0, (double) $t->amount_paid - (double) $t->total),
                 'cashierId' => '1',
                 'cashierName' => 'Kasir',
-                'status' => $t->is_refunded ? 'refunded' : 'selesai',
+                'status' => $t->is_refunded ? 'refunded' : ($t->payment_method === 'pending' ? 'pending' : 'selesai'),
                 'refundReason' => $t->refund_reason,
                 'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
                 'syncStatus' => 'synced',
             ];
         });
+
+        // Data Pesanan Meja yang Menunggu Pembayaran (Pending Table Orders)
+        $pendingTableOrders = Transaksi::where('payment_method', 'pending')
+            ->latest()
+            ->get()
+            ->map(function ($t) {
+                return [
+                    'id' => (string) $t->id,
+                    'invoiceNumber' => $t->invoice_number,
+                    'customerName' => $t->customer_name ?? 'Pelanggan Meja',
+                    'orderType' => $t->order_type ?? 'dine_in',
+                    'items' => $t->items ?? [],
+                    'subtotal' => (double) $t->subtotal,
+                    'discount' => (double) $t->discount_amount,
+                    'tax' => (double) $t->tax,
+                    'total' => (double) $t->total,
+                    'paymentMethod' => 'pending',
+                    'amountPaid' => 0.0,
+                    'change' => 0.0,
+                    'cashierId' => '',
+                    'cashierName' => '',
+                    'status' => 'pending',
+                    'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
+                    'syncStatus' => 'synced',
+                ];
+            });
 
         return response()->json([
             'status' => 'success',
@@ -139,13 +165,14 @@ class SyncController extends Controller
                     'id' => (string) $kedai->id,
                     'name' => $kedai->name,
                     'address' => $kedai->address ?? 'Jl. Sasmitatmaja No.6, Paledang, Kec. Lengkong, Kota Bandung, Jawa Barat 40261',
-                    'phone' => $kedai->phone ?? '0812-3456-7890',
+                    'phone' => $kedai->phone ?? '',
                     'taxPercentage' => 11.0,
+                    'isTaxEnabled' => true,
                     'dailyBudget' => (double) ($kedai->budget_harian ?? 1000000.0),
                     'receiptHeader' => 'something, between home and everywhere',
                     'receiptFooter' => 'Silakan datang kembali!',
                     'wifiSsid' => $kedai->wifi_ssid ?? 'moreandmore',
-                    'wifiPassword' => $kedai->wifi_password ?? 'bolehmintasenyumnya?',
+                    'wifiPassword' => $kedai->wifi_password ?? 'bolehlihatsenyumnya?',
                     'instagram' => $kedai->instagram ?? 'morebrewcoffee',
                 ],
                 'users' => $users,
@@ -154,6 +181,7 @@ class SyncController extends Controller
                 'tables' => $tables,
                 'vouchers' => $vouchers,
                 'transactions' => $recentTransactions,
+                'pending_orders' => $pendingTableOrders,
             ],
         ]);
     }
@@ -217,6 +245,7 @@ class SyncController extends Controller
                         'total'          => $tx['total'] ?? 0,
                         'payment_method' => $tx['paymentMethod'] ?? $tx['payment_method'] ?? 'cash',
                         'amount_paid'    => $tx['amountPaid'] ?? $tx['amount_paid'] ?? ($tx['total'] ?? 0),
+                        'sesi_kasir_id'  => $tx['cashierSessionId'] ?? null,
                         'created_at'     => isset($tx['createdAt']) ? Carbon::parse($tx['createdAt']) : now(),
                     ]);
 
@@ -358,23 +387,41 @@ class SyncController extends Controller
 
                     if (!$sesRecord) {
                         SesiKasir::create([
-                            'user_id' => $userId,
-                            'waktu_buka' => $openTime,
-                            'waktu_tutup' => $closeTime,
-                            'modal_awal' => $ses['initialCash'] ?? 0,
-                            'total_pendapatan' => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
-                            'uang_fisik' => $ses['physicalCash'] ?? 0,
-                            'selisih' => $ses['difference'] ?? 0,
-                            'status' => $ses['status'] ?? 'open',
+                            'user_id'             => $userId,
+                            'session_number'      => $ses['sessionNumber'] ?? null,
+                            'previous_session_id' => $ses['previousSessionId'] ?? null,
+                            'waktu_buka'          => $openTime,
+                            'waktu_tutup'         => $closeTime,
+                            'modal_awal'          => $ses['initialCash'] ?? 0,
+                            'total_pendapatan'    => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
+                            'total_cash_sales'    => $ses['totalCashSales'] ?? 0,
+                            'total_non_cash_sales'=> $ses['totalNonCashSales'] ?? 0,
+                            'cash_in'             => $ses['cashIn'] ?? 0,
+                            'cash_out'            => $ses['cashOut'] ?? 0,
+                            'cash_expense'        => $ses['cashExpense'] ?? 0,
+                            'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? 0,
+                            'uang_fisik'          => $ses['physicalCash'] ?? 0,
+                            'selisih'             => $ses['difference'] ?? 0,
+                            'status'              => $ses['status'] ?? 'open',
+                            'catatan'             => $ses['closingNote'] ?? $ses['openingNote'] ?? null,
                         ]);
                         $syncedSessions++;
                     } else if ($closeTime) {
                         $sesRecord->update([
-                            'waktu_tutup' => $closeTime,
-                            'total_pendapatan' => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
-                            'uang_fisik' => $ses['physicalCash'] ?? 0,
-                            'selisih' => $ses['difference'] ?? 0,
-                            'status' => 'closed',
+                            'session_number'      => $ses['sessionNumber'] ?? $sesRecord->session_number,
+                            'previous_session_id' => $ses['previousSessionId'] ?? $sesRecord->previous_session_id,
+                            'waktu_tutup'         => $closeTime,
+                            'total_pendapatan'    => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
+                            'total_cash_sales'    => $ses['totalCashSales'] ?? 0,
+                            'total_non_cash_sales'=> $ses['totalNonCashSales'] ?? 0,
+                            'cash_in'             => $ses['cashIn'] ?? 0,
+                            'cash_out'            => $ses['cashOut'] ?? 0,
+                            'cash_expense'        => $ses['cashExpense'] ?? 0,
+                            'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? 0,
+                            'uang_fisik'          => $ses['physicalCash'] ?? 0,
+                            'selisih'             => $ses['difference'] ?? 0,
+                            'status'              => 'closed',
+                            'catatan'             => $ses['closingNote'] ?? $ses['openingNote'] ?? $sesRecord->catatan,
                         ]);
                         $syncedSessions++;
                     }
@@ -436,6 +483,84 @@ class SyncController extends Controller
                 'role' => $user->role ?? 'kasir',
                 'phone' => $user->phone ?? '',
                 'kedai_id' => $user->kedai_id,
+            ],
+        ]);
+    }
+
+    /**
+     * API: Ambil semua pesanan meja yang berstatus 'pending' (menunggu kasir bayar)
+     */
+    public function getPendingTableOrders()
+    {
+        $orders = Transaksi::where('payment_method', 'pending')
+            ->latest()
+            ->get()
+            ->map(function ($t) {
+                return [
+                    'id' => (string) $t->id,
+                    'invoiceNumber' => $t->invoice_number,
+                    'customerName' => $t->customer_name ?? 'Pelanggan Meja',
+                    'orderType' => $t->order_type ?? 'dine_in',
+                    'items' => $t->items ?? [],
+                    'subtotal' => (double) $t->subtotal,
+                    'discount' => (double) $t->discount_amount,
+                    'tax' => (double) $t->tax,
+                    'total' => (double) $t->total,
+                    'paymentMethod' => 'pending',
+                    'amountPaid' => 0.0,
+                    'change' => 0.0,
+                    'cashierId' => '',
+                    'cashierName' => '',
+                    'status' => 'pending',
+                    'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
+                    'syncStatus' => 'synced',
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'count' => $orders->count(),
+            'data' => $orders,
+            'server_time' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * API: Kasir memproses pembayaran pesanan meja
+     * Mengubah status pesanan meja menjadi selesai/terbayar
+     */
+    public function payTableOrder(Request $request, $invoice)
+    {
+        $transaksi = Transaksi::where('invoice_number', $invoice)->first();
+        if (!$transaksi) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pesanan dengan invoice ' . $invoice . ' tidak ditemukan.',
+            ], 404);
+        }
+
+        $paymentMethod = $request->input('payment_method', 'Tunai');
+        $amountPaid = (double) $request->input('amount_paid', $transaksi->total);
+        $cashierId = $request->input('cashier_id');
+        $sesiKasirId = $request->input('sesi_kasir_id') ?? $request->input('cashier_session_id');
+
+        $transaksi->update([
+            'payment_method' => $paymentMethod,
+            'amount_paid'    => $amountPaid,
+            'user_id'        => $cashierId,
+            'sesi_kasir_id'  => $sesiKasirId,
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Pesanan meja #' . $invoice . ' berhasil dibayar via ' . $paymentMethod . '.',
+            'data'    => [
+                'invoiceNumber' => $transaksi->invoice_number,
+                'paymentMethod' => $transaksi->payment_method,
+                'total'         => (double) $transaksi->total,
+                'amountPaid'    => (double) $transaksi->amount_paid,
+                'change'        => max(0, (double) $transaksi->amount_paid - (double) $transaksi->total),
+                'status'        => 'selesai',
             ],
         ]);
     }
