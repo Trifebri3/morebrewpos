@@ -120,7 +120,7 @@ class SyncController extends Controller
         });
 
         // Data Transaksi Terbaru untuk sinkronisasi riwayat
-        $recentTransactions = Transaksi::latest()->take(50)->get()->map(function ($t) {
+        $recentTransactions = Transaksi::with(['voucher', 'user'])->latest()->take(100)->get()->map(function ($t) {
             return [
                 'id' => (string) $t->id,
                 'invoiceNumber' => $t->invoice_number,
@@ -135,11 +135,70 @@ class SyncController extends Controller
                 'paymentMethod' => $t->payment_method ?? 'cash',
                 'amountPaid' => (double) $t->amount_paid,
                 'change' => max(0, (double) $t->amount_paid - (double) $t->total),
-                'cashierId' => '1',
-                'cashierName' => 'Kasir',
+                'cashierId' => (string) ($t->user_id ?? 1),
+                'cashierName' => $t->user ? $t->user->name : 'Kasir',
+                'cashierSessionId' => $t->sesi_kasir_id ? (string) $t->sesi_kasir_id : null,
                 'status' => $t->is_refunded ? 'refunded' : ($t->payment_method === 'pending' || $t->payment_method === 'bayar_nanti' ? 'pending' : 'selesai'),
                 'refundReason' => $t->refund_reason,
                 'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
+                'syncStatus' => 'synced',
+            ];
+        });
+
+        // Data Sesi Kasir Terbaru (sinkronisasi dua arah untuk rekam jejak shift kasir)
+        $recentSessions = SesiKasir::with('user')->latest('waktu_buka')->take(100)->get()->map(function ($s) {
+            $isBuka = in_array(strtolower($s->status ?? ''), ['buka', 'open']);
+            return [
+                'id' => (string) $s->id,
+                'sessionNumber' => $s->session_number ?? ('#' . str_pad($s->id, 3, '0', STR_PAD_LEFT)),
+                'userId' => (string) $s->user_id,
+                'userName' => $s->user ? $s->user->name : 'Kasir',
+                'previousSessionId' => $s->previous_session_id ? (string) $s->previous_session_id : null,
+                'openedAt' => $s->waktu_buka ? $s->waktu_buka->toIso8601String() : now()->toIso8601String(),
+                'closedAt' => $s->waktu_tutup ? $s->waktu_tutup->toIso8601String() : null,
+                'initialCash' => (double) ($s->modal_awal ?? 0),
+                'totalCashSales' => (double) ($s->total_cash_sales ?? 0),
+                'totalNonCashSales' => (double) ($s->total_non_cash_sales ?? 0),
+                'cashIn' => (double) ($s->cash_in ?? 0),
+                'cashOut' => (double) ($s->cash_out ?? 0),
+                'cashExpense' => (double) ($s->cash_expense ?? 0),
+                'physicalCash' => $s->uang_fisik !== null ? (double) $s->uang_fisik : null,
+                'difference' => $s->selisih !== null ? (double) $s->selisih : null,
+                'openingNote' => null,
+                'closingNote' => $s->catatan,
+                'status' => $isBuka ? 'open' : 'closed',
+                'syncStatus' => 'synced',
+            ];
+        });
+
+        // Data Pengeluaran Operasional Terbaru
+        $recentExpenses = Pengeluaran::with('user')->latest('tanggal')->take(100)->get()->map(function ($e) {
+            return [
+                'id' => (string) $e->id,
+                'name' => $e->nama_item,
+                'category' => 'Operasional',
+                'amount' => (double) $e->nominal,
+                'notes' => $e->keterangan ?? '',
+                'cashierId' => (string) ($e->user_id ?? 1),
+                'cashierName' => $e->user ? $e->user->name : 'Kasir',
+                'status' => $e->status ?? 'approved',
+                'createdAt' => $e->tanggal ? Carbon::parse($e->tanggal)->toIso8601String() : ($e->created_at ? $e->created_at->toIso8601String() : now()->toIso8601String()),
+                'cashierSessionId' => null,
+                'syncStatus' => 'synced',
+            ];
+        });
+
+        // Data Absensi Karyawan
+        $recentAttendances = Absensi::with('user')->latest()->take(100)->get()->map(function ($a) {
+            return [
+                'id' => (string) $a->id,
+                'userId' => (string) $a->user_id,
+                'userName' => $a->user ? $a->user->name : 'Karyawan',
+                'date' => $a->created_at ? $a->created_at->toDateString() : today()->toDateString(),
+                'clockIn' => $a->created_at ? $a->created_at->toTimeString() : '00:00:00',
+                'clockOut' => null,
+                'status' => $a->status ?? ($a->type === 'Masuk' ? 'Hadir' : 'Hadir'),
+                'notes' => $a->type ?? '',
                 'syncStatus' => 'synced',
             ];
         });
@@ -195,6 +254,9 @@ class SyncController extends Controller
                 'tables' => $tables,
                 'vouchers' => $vouchers,
                 'transactions' => $recentTransactions,
+                'sessions' => $recentSessions,
+                'expenses' => $recentExpenses,
+                'attendances' => $recentAttendances,
                 'pending_orders' => $pendingTableOrders,
             ],
         ]);
@@ -418,9 +480,21 @@ class SyncController extends Controller
                     $openTime = isset($ses['openedAt']) ? Carbon::parse($ses['openedAt']) : now();
                     $closeTime = isset($ses['closedAt']) ? Carbon::parse($ses['closedAt']) : null;
 
-                    $sesRecord = SesiKasir::where('user_id', $userId)
-                        ->whereDate('waktu_buka', $openTime->toDateString())
-                        ->first();
+                    $sesRecord = null;
+                    if (!empty($ses['id']) && is_numeric($ses['id'])) {
+                        $sesRecord = SesiKasir::find($ses['id']);
+                    }
+                    if (!$sesRecord && !empty($ses['sessionNumber'])) {
+                        $sesRecord = SesiKasir::where('session_number', $ses['sessionNumber'])->first();
+                    }
+                    if (!$sesRecord) {
+                        $sesRecord = SesiKasir::where('user_id', $userId)
+                            ->whereDate('waktu_buka', $openTime->toDateString())
+                            ->first();
+                    }
+
+                    $isBuka = in_array(strtolower($ses['status'] ?? 'open'), ['open', 'buka']) && !$closeTime;
+                    $statusStr = $isBuka ? 'buka' : 'tutup';
 
                     if (!$sesRecord) {
                         SesiKasir::create([
@@ -437,27 +511,27 @@ class SyncController extends Controller
                             'cash_out'            => $ses['cashOut'] ?? 0,
                             'cash_expense'        => $ses['cashExpense'] ?? 0,
                             'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? 0,
-                            'uang_fisik'          => $ses['physicalCash'] ?? 0,
-                            'selisih'             => $ses['difference'] ?? 0,
-                            'status'              => $ses['status'] ?? 'open',
+                            'uang_fisik'          => (isset($ses['physicalCash']) && $ses['physicalCash'] !== null) ? $ses['physicalCash'] : 0,
+                            'selisih'             => (isset($ses['difference']) && $ses['difference'] !== null) ? $ses['difference'] : 0,
+                            'status'              => $statusStr,
                             'catatan'             => $ses['closingNote'] ?? $ses['openingNote'] ?? null,
                         ]);
                         $syncedSessions++;
-                    } else if ($closeTime) {
+                    } else {
                         $sesRecord->update([
                             'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : $sesRecord->session_number,
                             'previous_session_id' => !empty($ses['previousSessionId']) ? $ses['previousSessionId'] : $sesRecord->previous_session_id,
-                            'waktu_tutup'         => $closeTime,
+                            'waktu_tutup'         => $closeTime ?? $sesRecord->waktu_tutup,
                             'total_pendapatan'    => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
-                            'total_cash_sales'    => $ses['totalCashSales'] ?? 0,
-                            'total_non_cash_sales'=> $ses['totalNonCashSales'] ?? 0,
-                            'cash_in'             => $ses['cashIn'] ?? 0,
-                            'cash_out'            => $ses['cashOut'] ?? 0,
-                            'cash_expense'        => $ses['cashExpense'] ?? 0,
-                            'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? 0,
-                            'uang_fisik'          => $ses['physicalCash'] ?? 0,
-                            'selisih'             => $ses['difference'] ?? 0,
-                            'status'              => 'closed',
+                            'total_cash_sales'    => $ses['totalCashSales'] ?? $sesRecord->total_cash_sales,
+                            'total_non_cash_sales'=> $ses['totalNonCashSales'] ?? $sesRecord->total_non_cash_sales,
+                            'cash_in'             => $ses['cashIn'] ?? $sesRecord->cash_in,
+                            'cash_out'            => $ses['cashOut'] ?? $sesRecord->cash_out,
+                            'cash_expense'        => $ses['cashExpense'] ?? $sesRecord->cash_expense,
+                            'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? $sesRecord->expected_balance,
+                            'uang_fisik'          => (isset($ses['physicalCash']) && $ses['physicalCash'] !== null) ? $ses['physicalCash'] : ($sesRecord->uang_fisik ?? 0),
+                            'selisih'             => (isset($ses['difference']) && $ses['difference'] !== null) ? $ses['difference'] : ($sesRecord->selisih ?? 0),
+                            'status'              => $statusStr,
                             'catatan'             => $ses['closingNote'] ?? $ses['openingNote'] ?? $sesRecord->catatan,
                         ]);
                         $syncedSessions++;
@@ -755,5 +829,53 @@ class SyncController extends Controller
                 'file' => $e->getFile()
             ], 500);
         }
+    }
+
+    /**
+     * PING: Cek respon server untuk Developer Diagnostic
+     */
+    public function ping()
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'PONG! Server MoreBrew POS aktif dan responsif.',
+            'server_time' => now()->toIso8601String(),
+            'database_connected' => true,
+        ]);
+    }
+
+    /**
+     * DIAGNOSTIC: Cek kesehatan database & statistik server untuk Developer Tools
+     */
+    public function diagnostic()
+    {
+        $dbOk = false;
+        $dbError = null;
+        $stats = [];
+        try {
+            \Illuminate\Support\Facades\DB::connection()->getPdo();
+            $dbOk = true;
+            $stats = [
+                'products_count'     => Produk::count(),
+                'users_count'        => User::count(),
+                'transactions_count' => Transaksi::count(),
+                'expenses_count'     => Pengeluaran::count(),
+                'categories_count'   => Kategori::count(),
+                'tables_count'       => Meja::count(),
+                'vouchers_count'     => Voucher::count(),
+            ];
+        } catch (\Throwable $e) {
+            $dbError = $e->getMessage();
+        }
+
+        return response()->json([
+            'status'          => $dbOk ? 'success' : 'error',
+            'server_time'     => now()->toIso8601String(),
+            'php_version'     => PHP_VERSION,
+            'laravel_version' => app()->version(),
+            'db_connected'    => $dbOk,
+            'db_error'        => $dbError,
+            'stats'           => $stats,
+        ]);
     }
 }

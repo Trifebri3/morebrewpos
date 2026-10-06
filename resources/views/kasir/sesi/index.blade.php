@@ -109,7 +109,7 @@
                     @endif
                 </td>
                 <td>
-                    @if($sesi->status == 'Buka')
+                    @if(in_array(strtolower($sesi->status ?? ''), ['buka', 'open']))
                         <span style="background: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Sedang Aktif</span>
                     @else
                         <span style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Selesai</span>

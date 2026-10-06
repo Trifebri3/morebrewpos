@@ -28,3 +28,8 @@ Route::post('/orders/{invoice}/pay', [SyncController::class, 'payTableOrder'])->
 Route::get('/settings', [SyncController::class, 'getSettings'])->name('api.settings.get');
 Route::post('/settings', [SyncController::class, 'updateSettings'])->name('api.settings.update');
 
+// Diagnostic & Ping Endpoints untuk Developer Tools
+Route::get('/ping', [SyncController::class, 'ping'])->name('api.ping');
+Route::get('/diagnostic', [SyncController::class, 'diagnostic'])->name('api.diagnostic');
+
+

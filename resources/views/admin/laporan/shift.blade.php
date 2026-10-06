@@ -377,8 +377,9 @@
                             </span>
                         </td>
                         <td>
-                            <span class="badge-status {{ $s->status === 'buka' ? 'badge-buka' : 'badge-tutup' }}">
-                                {{ strtoupper($s->status ?? 'BUKA') }}
+                            @php $isOpen = in_array(strtolower($s->status ?? ''), ['buka', 'open']); @endphp
+                            <span class="badge-status {{ $isOpen ? 'badge-buka' : 'badge-tutup' }}">
+                                {{ $isOpen ? 'BUKA / AKTIF' : 'SELESAI' }}
                             </span>
                         </td>
                         <td style="font-size: 12px; color: var(--text-muted);">{{ $s->catatan ?: '-' }}</td>

@@ -13,7 +13,8 @@ class SesiController extends Controller
         $data['title'] = 'Manajemen Sesi Kasir';
         
         $sesiAktif = \App\Models\SesiKasir::where('user_id', auth()->id())
-            ->where('status', 'Buka')
+            ->whereIn('status', ['Buka', 'buka', 'open', 'OPEN'])
+            ->latest('waktu_buka')
             ->first();
             
         $riwayatSesi = \App\Models\SesiKasir::where('user_id', auth()->id())
@@ -34,7 +35,7 @@ class SesiController extends Controller
         ]);
 
         $cekSesi = \App\Models\SesiKasir::where('user_id', auth()->id())
-            ->where('status', 'Buka')
+            ->whereIn('status', ['Buka', 'buka', 'open', 'OPEN'])
             ->exists();
             
         if ($cekSesi) {
@@ -45,7 +46,7 @@ class SesiController extends Controller
             'user_id' => auth()->id(),
             'waktu_buka' => now(),
             'modal_awal' => $request->modal_awal,
-            'status' => 'Buka'
+            'status' => 'buka'
         ]);
 
         return back()->with('success', 'Sesi kasir berhasil dibuka. Selamat bertugas!');
@@ -59,7 +60,8 @@ class SesiController extends Controller
         ]);
 
         $sesiAktif = \App\Models\SesiKasir::where('user_id', auth()->id())
-            ->where('status', 'Buka')
+            ->whereIn('status', ['Buka', 'buka', 'open', 'OPEN'])
+            ->latest('waktu_buka')
             ->first();
             
         if (!$sesiAktif) {

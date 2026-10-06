@@ -21,4 +21,14 @@ class Transaksi extends Model
     {
         return $this->belongsTo(Voucher::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function sesiKasir()
+    {
+        return $this->belongsTo(SesiKasir::class, 'sesi_kasir_id');
+    }
 }
