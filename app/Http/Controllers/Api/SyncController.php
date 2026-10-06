@@ -279,7 +279,8 @@ class SyncController extends Controller
                         'total'          => $tx['total'] ?? 0,
                         'payment_method' => $tx['paymentMethod'] ?? $tx['payment_method'] ?? 'cash',
                         'amount_paid'    => $tx['amountPaid'] ?? $tx['amount_paid'] ?? ($tx['total'] ?? 0),
-                        'sesi_kasir_id'  => $tx['cashierSessionId'] ?? null,
+                        'user_id'        => !empty($tx['cashierId']) ? $tx['cashierId'] : (!empty($tx['user_id']) ? $tx['user_id'] : null),
+                        'sesi_kasir_id'  => !empty($tx['cashierSessionId']) ? $tx['cashierSessionId'] : (!empty($tx['sesi_kasir_id']) ? $tx['sesi_kasir_id'] : null),
                         'created_at'     => isset($tx['createdAt']) ? Carbon::parse($tx['createdAt']) : now(),
                     ]);
 
@@ -331,16 +332,18 @@ class SyncController extends Controller
                         $userId = $user?->id;
                     }
 
-                    Pengeluaran::create([
-                        'kedai_id'   => $kedaiId,
-                        'user_id'    => $userId,
-                        'tanggal'    => $date,
-                        'nama_item'  => $name,
-                        'nominal'    => $amount,
-                        'keterangan' => ($exp['category'] ?? '') . ': ' . ($exp['notes'] ?? ''),
-                        'status'     => $exp['status'] ?? 'pending',
-                    ]);
-                    $syncedExpenses++;
+                    if ($userId) {
+                        Pengeluaran::create([
+                            'kedai_id'   => $kedaiId,
+                            'user_id'    => $userId,
+                            'tanggal'    => $date,
+                            'nama_item'  => $name,
+                            'nominal'    => $amount,
+                            'keterangan' => ($exp['category'] ?? '') . ': ' . ($exp['notes'] ?? ''),
+                            'status'     => $exp['status'] ?? 'pending',
+                        ]);
+                        $syncedExpenses++;
+                    }
                 }
             }
         }
@@ -422,8 +425,8 @@ class SyncController extends Controller
                     if (!$sesRecord) {
                         SesiKasir::create([
                             'user_id'             => $userId,
-                            'session_number'      => $ses['sessionNumber'] ?? null,
-                            'previous_session_id' => $ses['previousSessionId'] ?? null,
+                            'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : null,
+                            'previous_session_id' => !empty($ses['previousSessionId']) ? $ses['previousSessionId'] : null,
                             'waktu_buka'          => $openTime,
                             'waktu_tutup'         => $closeTime,
                             'modal_awal'          => $ses['initialCash'] ?? 0,
@@ -442,8 +445,8 @@ class SyncController extends Controller
                         $syncedSessions++;
                     } else if ($closeTime) {
                         $sesRecord->update([
-                            'session_number'      => $ses['sessionNumber'] ?? $sesRecord->session_number,
-                            'previous_session_id' => $ses['previousSessionId'] ?? $sesRecord->previous_session_id,
+                            'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : $sesRecord->session_number,
+                            'previous_session_id' => !empty($ses['previousSessionId']) ? $ses['previousSessionId'] : $sesRecord->previous_session_id,
                             'waktu_tutup'         => $closeTime,
                             'total_pendapatan'    => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
                             'total_cash_sales'    => $ses['totalCashSales'] ?? 0,
