@@ -296,105 +296,293 @@ class SyncController extends Controller
         $syncedAttendances = 0;
         $syncedSessions = 0;
 
-        // 1. Simpan Transaksi Penjualan
-        $transactions = $request->input('transactions', []);
-        if (is_array($transactions)) {
-            foreach ($transactions as $tx) {
-                $inv = $tx['invoiceNumber'] ?? $tx['invoice_number'] ?? null;
-                if (!$inv) continue;
+        // 1. Simpan Sesi Kasir (Buka / Tutup) TERLEBIH DAHULU agar transaksi dapat direlasikan
+        $sessions = $request->input('sessions', []);
+        $sessionIdMap = []; // Mapping dari string ID mobile (cth: 'sesi-1791280911856') atau session_number ke ID integer database
 
-                $cleanInv = preg_replace('/^INV-?/i', '', (string)$inv);
-                $existing = Transaksi::where('invoice_number', $cleanInv)->orWhere('invoice_number', $inv)->first();
-                if (!$existing) {
-                    $voucherId = null;
-                    if (!empty($tx['voucherCode'])) {
-                        $v = Voucher::where('kode', $tx['voucherCode'])->first();
-                        if ($v) {
-                            $voucherId = $v->id;
-                            $v->increment('terpakai');
-                            if ($v->kuota !== null && $v->kuota > 0) {
-                                $v->decrement('kuota');
-                            }
+        if (is_array($sessions)) {
+            // Urutkan sesi dari yang paling lama dibuka ke yang terbaru agar rantai sesi (previousSessionId) terbentuk sempurna
+            usort($sessions, function ($a, $b) {
+                $tA = isset($a['openedAt']) ? strtotime($a['openedAt']) : 0;
+                $tB = isset($b['openedAt']) ? strtotime($b['openedAt']) : 0;
+                return $tA <=> $tB;
+            });
+
+            foreach ($sessions as $ses) {
+                try {
+                    $userId = null;
+                    if (!empty($ses['userId'])) {
+                        if (is_numeric($ses['userId'])) {
+                            $userId = (int)$ses['userId'];
+                        } else {
+                            $u = User::where('id', $ses['userId'])->orWhere('email', $ses['userId'])->first();
+                            $userId = $u?->id;
+                        }
+                    }
+                    if (!$userId) {
+                        $u = User::where('role', 'kasir')->first();
+                        $userId = $u?->id ?? 1;
+                    }
+
+                    $openTime = isset($ses['openedAt']) ? Carbon::parse($ses['openedAt']) : now();
+                    $closeTime = isset($ses['closedAt']) && !empty($ses['closedAt']) ? Carbon::parse($ses['closedAt']) : null;
+
+                    $sesRecord = null;
+                    if (!empty($ses['id']) && is_numeric($ses['id'])) {
+                        $sesRecord = SesiKasir::find($ses['id']);
+                    }
+                    if (!$sesRecord && !empty($ses['sessionNumber'])) {
+                        $sesRecord = SesiKasir::where('session_number', $ses['sessionNumber'])->first();
+                    }
+                    if (!$sesRecord) {
+                        // Cari berdasarkan rentang waktu buka (toleransi 2 menit)
+                        $sesRecord = SesiKasir::where('user_id', $userId)
+                            ->whereBetween('waktu_buka', [
+                                $openTime->copy()->subMinutes(2),
+                                $openTime->copy()->addMinutes(2)
+                            ])
+                            ->first();
+                    }
+
+                    // Resolve previous_session_id (Wajib integer atau null)
+                    $prevId = null;
+                    if (!empty($ses['previousSessionId'])) {
+                        if (isset($sessionIdMap[$ses['previousSessionId']])) {
+                            $prevId = $sessionIdMap[$ses['previousSessionId']];
+                        } elseif (is_numeric($ses['previousSessionId'])) {
+                            $prevId = (int)$ses['previousSessionId'];
                         }
                     }
 
-                    $rawItems = $tx['items'] ?? [];
-                    if (is_string($rawItems)) {
-                        $rawItems = json_decode($rawItems, true) ?? [];
+                    $isBuka = in_array(strtolower($ses['status'] ?? 'open'), ['open', 'buka']) && !$closeTime;
+                    $statusStr = $isBuka ? 'buka' : 'tutup';
+
+                    $modalAwal = (double)($ses['initialCash'] ?? 0);
+                    $cashSales = (double)($ses['totalCashSales'] ?? 0);
+                    $nonCashSales = (double)($ses['totalNonCashSales'] ?? 0);
+                    $totalPendapatan = $cashSales + $nonCashSales;
+                    $cashIn = (double)($ses['cashIn'] ?? 0);
+                    $cashOut = (double)($ses['cashOut'] ?? 0);
+                    $cashExp = (double)($ses['cashExpense'] ?? 0);
+                    $expBalance = (double)($ses['expectedCash'] ?? $ses['expected_balance'] ?? ($modalAwal + $cashSales + $cashIn - $cashExp - $cashOut));
+                    $uangFisik = (isset($ses['physicalCash']) && $ses['physicalCash'] !== null) ? (double)$ses['physicalCash'] : 0;
+                    $selisih = (isset($ses['difference']) && $ses['difference'] !== null) ? (double)$ses['difference'] : ($closeTime ? ($uangFisik - $expBalance) : 0);
+                    $catatan = $ses['closingNote'] ?? $ses['openingNote'] ?? null;
+
+                    if (!$sesRecord) {
+                        $sesRecord = SesiKasir::create([
+                            'user_id'             => $userId,
+                            'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : null,
+                            'previous_session_id' => $prevId,
+                            'waktu_buka'          => $openTime,
+                            'waktu_tutup'         => $closeTime,
+                            'modal_awal'          => $modalAwal,
+                            'total_pendapatan'    => $totalPendapatan,
+                            'total_cash_sales'    => $cashSales,
+                            'total_non_cash_sales'=> $nonCashSales,
+                            'cash_in'             => $cashIn,
+                            'cash_out'            => $cashOut,
+                            'cash_expense'        => $cashExp,
+                            'expected_balance'    => $expBalance,
+                            'uang_fisik'          => $uangFisik,
+                            'selisih'             => $selisih,
+                            'status'              => $statusStr,
+                            'catatan'             => $catatan,
+                            'created_at'          => $openTime,
+                        ]);
+                        $syncedSessions++;
+                    } else {
+                        $sesRecord->update([
+                            'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : $sesRecord->session_number,
+                            'previous_session_id' => $prevId ?? $sesRecord->previous_session_id,
+                            'waktu_tutup'         => $closeTime ?? $sesRecord->waktu_tutup,
+                            'total_pendapatan'    => $totalPendapatan > 0 ? $totalPendapatan : $sesRecord->total_pendapatan,
+                            'total_cash_sales'    => $cashSales > 0 ? $cashSales : $sesRecord->total_cash_sales,
+                            'total_non_cash_sales'=> $nonCashSales > 0 ? $nonCashSales : $sesRecord->total_non_cash_sales,
+                            'cash_in'             => $cashIn > 0 ? $cashIn : $sesRecord->cash_in,
+                            'cash_out'            => $cashOut > 0 ? $cashOut : $sesRecord->cash_out,
+                            'cash_expense'        => $cashExp > 0 ? $cashExp : $sesRecord->cash_expense,
+                            'expected_balance'    => $expBalance > 0 ? $expBalance : $sesRecord->expected_balance,
+                            'uang_fisik'          => (isset($ses['physicalCash']) && $ses['physicalCash'] !== null) ? $uangFisik : ($sesRecord->uang_fisik ?? 0),
+                            'selisih'             => (isset($ses['difference']) && $ses['difference'] !== null) ? $selisih : ($sesRecord->selisih ?? 0),
+                            'status'              => $statusStr,
+                            'catatan'             => $catatan ?? $sesRecord->catatan,
+                        ]);
+                        $syncedSessions++;
                     }
 
-                    $custName = $tx['customerName'] ?? $tx['customer_name'] ?? 'Pelanggan Walk-In';
-                    $custPhone = !empty($tx['customerPhone']) ? trim($tx['customerPhone']) : (!empty($tx['customer_phone']) ? trim($tx['customer_phone']) : '');
-                    if (!empty($custPhone) && !str_contains($custName, $custPhone)) {
-                        $custName .= ' (' . $custPhone . ')';
-                    }
-
-                    Transaksi::create([
-                        'invoice_number' => $cleanInv,
-                        'customer_name'  => $custName,
-                        'order_type'     => $tx['orderType'] ?? $tx['order_type'] ?? 'dine_in',
-                        'items'          => $rawItems,
-                        'subtotal'       => $tx['subtotal'] ?? 0,
-                        'discount_amount'=> $tx['discount'] ?? $tx['discount_amount'] ?? 0,
-                        'voucher_id'     => $voucherId,
-                        'tax'            => $tx['tax'] ?? 0,
-                        'total'          => $tx['total'] ?? 0,
-                        'payment_method' => $tx['paymentMethod'] ?? $tx['payment_method'] ?? 'cash',
-                        'amount_paid'    => $tx['amountPaid'] ?? $tx['amount_paid'] ?? ($tx['total'] ?? 0),
-                        'user_id'        => !empty($tx['cashierId']) ? $tx['cashierId'] : (!empty($tx['user_id']) ? $tx['user_id'] : null),
-                        'sesi_kasir_id'  => !empty($tx['cashierSessionId']) ? $tx['cashierSessionId'] : (!empty($tx['sesi_kasir_id']) ? $tx['sesi_kasir_id'] : null),
-                        'created_at'     => isset($tx['createdAt']) ? Carbon::parse($tx['createdAt']) : now(),
-                    ]);
-
-                    // Kurangi stok produk di server
-                    foreach ($rawItems as $item) {
-                        $pId = $item['productId'] ?? $item['id'] ?? null;
-                        $qty = (int) ($item['quantity'] ?? $item['qty'] ?? 1);
-                        if ($pId) {
-                            $prod = Produk::find($pId);
-                            if (!$prod && isset($item['sku'])) {
-                                $prod = Produk::where('sku', $item['sku'])->first();
-                            }
-                            if (!$prod && isset($item['name'])) {
-                                $prod = Produk::where('name', $item['name'])->first();
-                            }
-                            if ($prod) {
-                                $prod->decrement('stock', $qty);
-                            }
+                    if ($sesRecord) {
+                        if (!empty($ses['id'])) {
+                            $sessionIdMap[$ses['id']] = $sesRecord->id;
+                        }
+                        if (!empty($ses['sessionNumber'])) {
+                            $sessionIdMap[$ses['sessionNumber']] = $sesRecord->id;
                         }
                     }
-
-                    $syncedTransactions++;
+                } catch (\Throwable $se) {
+                    \Illuminate\Support\Facades\Log::error('Error sync session: ' . $se->getMessage(), ['session' => $ses]);
                 }
             }
         }
 
-        // 2. Simpan Pengeluaran / Belanja Harian
+        // 2. Simpan Transaksi Penjualan (Relasikan ke Sesi Kasir yang baru disinkronkan)
+        $transactions = $request->input('transactions', []);
+        if (is_array($transactions)) {
+            foreach ($transactions as $tx) {
+                try {
+                    $inv = $tx['invoiceNumber'] ?? $tx['invoice_number'] ?? null;
+                    if (!$inv) continue;
+
+                    $cleanInv = trim(preg_replace('/^INV[\s\-]*/i', '', (string)$inv));
+                    $existing = Transaksi::where('invoice_number', $cleanInv)
+                        ->orWhere('invoice_number', $inv)
+                        ->orWhere('invoice_number', 'INV-' . $cleanInv)
+                        ->first();
+
+                    if (!$existing) {
+                        // Resolve User / Kasir ID
+                        $txUserId = null;
+                        if (!empty($tx['cashierId'])) {
+                            if (is_numeric($tx['cashierId'])) {
+                                $txUserId = (int)$tx['cashierId'];
+                            } else {
+                                $u = User::where('id', $tx['cashierId'])
+                                    ->orWhere('email', $tx['cashierId'])
+                                    ->orWhere('name', $tx['cashierName'] ?? '')
+                                    ->first();
+                                $txUserId = $u?->id;
+                            }
+                        }
+                        if (!$txUserId) {
+                            $txUserId = User::where('role', 'kasir')->first()?->id ?? 1;
+                        }
+
+                        // Resolve Sesi Kasir ID (PASTIKAN SELALU INTEGER ATAU NULL, JANGAN PERNAH STRING)
+                        $txSessionId = null;
+                        $rawSessionId = $tx['cashierSessionId'] ?? $tx['sesi_kasir_id'] ?? null;
+                        if (!empty($rawSessionId)) {
+                            if (isset($sessionIdMap[$rawSessionId])) {
+                                $txSessionId = $sessionIdMap[$rawSessionId];
+                            } elseif (is_numeric($rawSessionId)) {
+                                $txSessionId = (int)$rawSessionId;
+                            } else {
+                                $matchedSesi = SesiKasir::where('session_number', $rawSessionId)->first();
+                                if ($matchedSesi) {
+                                    $txSessionId = $matchedSesi->id;
+                                } else {
+                                    $activeUserSesi = SesiKasir::where('user_id', $txUserId)
+                                        ->whereIn('status', ['buka', 'open', 'Buka', 'OPEN'])
+                                        ->latest('waktu_buka')
+                                        ->first();
+                                    $txSessionId = $activeUserSesi?->id;
+                                }
+                            }
+                        }
+
+                        // Voucher
+                        $voucherId = null;
+                        if (!empty($tx['voucherCode'])) {
+                            $v = Voucher::where('kode', $tx['voucherCode'])->first();
+                            if ($v) {
+                                $voucherId = $v->id;
+                                $v->increment('terpakai');
+                                if ($v->kuota !== null && $v->kuota > 0) {
+                                    $v->decrement('kuota');
+                                }
+                            }
+                        }
+
+                        // Items
+                        $rawItems = $tx['items'] ?? [];
+                        if (is_string($rawItems)) {
+                            $rawItems = json_decode($rawItems, true) ?? [];
+                        }
+
+                        // Pelanggan
+                        $custName = $tx['customerName'] ?? $tx['customer_name'] ?? 'Pelanggan Walk-In';
+                        $custPhone = !empty($tx['customerPhone']) ? trim($tx['customerPhone']) : (!empty($tx['customer_phone']) ? trim($tx['customer_phone']) : '');
+                        if (!empty($custPhone) && !str_contains($custName, $custPhone)) {
+                            $custName .= ' (' . $custPhone . ')';
+                        }
+
+                        $txCreated = isset($tx['createdAt']) ? Carbon::parse($tx['createdAt']) : now();
+
+                        Transaksi::create([
+                            'invoice_number' => $cleanInv,
+                            'customer_name'  => $custName,
+                            'order_type'     => $tx['orderType'] ?? $tx['order_type'] ?? 'dine_in',
+                            'items'          => $rawItems,
+                            'subtotal'       => (double)($tx['subtotal'] ?? 0),
+                            'discount_amount'=> (double)($tx['discount'] ?? $tx['discount_amount'] ?? 0),
+                            'voucher_id'     => $voucherId,
+                            'tax'            => (double)($tx['tax'] ?? 0),
+                            'total'          => (double)($tx['total'] ?? 0),
+                            'payment_method' => $tx['paymentMethod'] ?? $tx['payment_method'] ?? 'cash',
+                            'amount_paid'    => (double)($tx['amountPaid'] ?? $tx['amount_paid'] ?? ($tx['total'] ?? 0)),
+                            'user_id'        => $txUserId,
+                            'sesi_kasir_id'  => $txSessionId,
+                            'created_at'     => $txCreated,
+                        ]);
+
+                        // Kurangi stok produk di server
+                        foreach ($rawItems as $item) {
+                            try {
+                                $pId = $item['productId'] ?? $item['id'] ?? null;
+                                $qty = (int) ($item['quantity'] ?? $item['qty'] ?? 1);
+                                if ($pId) {
+                                    $prod = is_numeric($pId) ? Produk::find($pId) : null;
+                                    if (!$prod && isset($item['sku'])) {
+                                        $prod = Produk::where('sku', $item['sku'])->first();
+                                    }
+                                    if (!$prod && isset($item['name'])) {
+                                        $prod = Produk::where('name', $item['name'])->first();
+                                    }
+                                    if ($prod) {
+                                        $prod->decrement('stock', $qty);
+                                    }
+                                }
+                            } catch (\Throwable $pe) {
+                                \Illuminate\Support\Facades\Log::warning("Gagal mengurangi stok produk: " . $pe->getMessage());
+                            }
+                        }
+
+                        $syncedTransactions++;
+                    }
+                } catch (\Throwable $te) {
+                    \Illuminate\Support\Facades\Log::error('Error sync transaksi: ' . $te->getMessage(), ['tx' => $tx]);
+                }
+            }
+        }
+
+        // 3. Simpan Pengeluaran / Belanja Harian
         $expenses = $request->input('expenses', []);
         if (is_array($expenses)) {
             foreach ($expenses as $exp) {
-                $name = $exp['name'] ?? 'Pengeluaran Kasir';
-                $amount = $exp['amount'] ?? 0;
-                $date = isset($exp['createdAt']) ? Carbon::parse($exp['createdAt'])->toDateString() : today()->toDateString();
+                try {
+                    $name = $exp['name'] ?? 'Pengeluaran Kasir';
+                    $amount = (double)($exp['amount'] ?? 0);
+                    $date = isset($exp['createdAt']) ? Carbon::parse($exp['createdAt'])->toDateString() : today()->toDateString();
 
-                // Cek duplikasi pengeluaran pada tanggal & nominal yang sama
-                $exists = Pengeluaran::where('nama_item', $name)
-                    ->where('nominal', $amount)
-                    ->whereDate('tanggal', $date)
-                    ->exists();
+                    $exists = Pengeluaran::where('nama_item', $name)
+                        ->where('nominal', $amount)
+                        ->whereDate('tanggal', $date)
+                        ->exists();
 
-                if (!$exists) {
-                    $userId = null;
-                    if (!empty($exp['cashierId'])) {
-                        $user = User::where('id', $exp['cashierId'])->orWhere('email', $exp['cashierId'])->first();
-                        $userId = $user?->id;
-                    }
-                    if (!$userId) {
-                        $user = User::where('role', 'kasir')->first();
-                        $userId = $user?->id;
-                    }
+                    if (!$exists) {
+                        $userId = null;
+                        if (!empty($exp['cashierId'])) {
+                            if (is_numeric($exp['cashierId'])) {
+                                $userId = (int)$exp['cashierId'];
+                            } else {
+                                $user = User::where('id', $exp['cashierId'])->orWhere('email', $exp['cashierId'])->first();
+                                $userId = $user?->id;
+                            }
+                        }
+                        if (!$userId) {
+                            $user = User::where('role', 'kasir')->first();
+                            $userId = $user?->id ?? 1;
+                        }
 
-                    if ($userId) {
                         Pengeluaran::create([
                             'kedai_id'   => $kedaiId,
                             'user_id'    => $userId,
@@ -406,25 +594,31 @@ class SyncController extends Controller
                         ]);
                         $syncedExpenses++;
                     }
+                } catch (\Throwable $ee) {
+                    \Illuminate\Support\Facades\Log::error('Error sync pengeluaran: ' . $ee->getMessage(), ['exp' => $exp]);
                 }
             }
         }
 
-        // 3. Simpan Absensi Karyawan
+        // 4. Simpan Absensi Karyawan
         $attendances = $request->input('attendances', []);
         if (is_array($attendances)) {
             foreach ($attendances as $att) {
-                $userId = null;
-                if (!empty($att['userId'])) {
-                    $user = User::where('id', $att['userId'])->orWhere('email', $att['userId'])->first();
-                    $userId = $user?->id;
-                }
-                if (!$userId) {
-                    $user = User::where('role', 'kasir')->first();
-                    $userId = $user?->id;
-                }
+                try {
+                    $userId = null;
+                    if (!empty($att['userId'])) {
+                        if (is_numeric($att['userId'])) {
+                            $userId = (int)$att['userId'];
+                        } else {
+                            $user = User::where('id', $att['userId'])->orWhere('email', $att['userId'])->first();
+                            $userId = $user?->id;
+                        }
+                    }
+                    if (!$userId) {
+                        $user = User::where('role', 'kasir')->first();
+                        $userId = $user?->id ?? 1;
+                    }
 
-                if ($userId) {
                     $dateStr = $att['date'] ?? today()->toDateString();
                     // Clock In
                     if (!empty($att['clockIn'])) {
@@ -458,84 +652,8 @@ class SyncController extends Controller
                             $syncedAttendances++;
                         }
                     }
-                }
-            }
-        }
-
-        // 4. Simpan Sesi Kasir (Buka / Tutup)
-        $sessions = $request->input('sessions', []);
-        if (is_array($sessions)) {
-            foreach ($sessions as $ses) {
-                $userId = null;
-                if (!empty($ses['userId'])) {
-                    $u = User::where('id', $ses['userId'])->orWhere('email', $ses['userId'])->first();
-                    $userId = $u?->id;
-                }
-                if (!$userId) {
-                    $u = User::where('role', 'kasir')->first();
-                    $userId = $u?->id;
-                }
-
-                if ($userId) {
-                    $openTime = isset($ses['openedAt']) ? Carbon::parse($ses['openedAt']) : now();
-                    $closeTime = isset($ses['closedAt']) ? Carbon::parse($ses['closedAt']) : null;
-
-                    $sesRecord = null;
-                    if (!empty($ses['id']) && is_numeric($ses['id'])) {
-                        $sesRecord = SesiKasir::find($ses['id']);
-                    }
-                    if (!$sesRecord && !empty($ses['sessionNumber'])) {
-                        $sesRecord = SesiKasir::where('session_number', $ses['sessionNumber'])->first();
-                    }
-                    if (!$sesRecord) {
-                        $sesRecord = SesiKasir::where('user_id', $userId)
-                            ->whereDate('waktu_buka', $openTime->toDateString())
-                            ->first();
-                    }
-
-                    $isBuka = in_array(strtolower($ses['status'] ?? 'open'), ['open', 'buka']) && !$closeTime;
-                    $statusStr = $isBuka ? 'buka' : 'tutup';
-
-                    if (!$sesRecord) {
-                        SesiKasir::create([
-                            'user_id'             => $userId,
-                            'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : null,
-                            'previous_session_id' => !empty($ses['previousSessionId']) ? $ses['previousSessionId'] : null,
-                            'waktu_buka'          => $openTime,
-                            'waktu_tutup'         => $closeTime,
-                            'modal_awal'          => $ses['initialCash'] ?? 0,
-                            'total_pendapatan'    => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
-                            'total_cash_sales'    => $ses['totalCashSales'] ?? 0,
-                            'total_non_cash_sales'=> $ses['totalNonCashSales'] ?? 0,
-                            'cash_in'             => $ses['cashIn'] ?? 0,
-                            'cash_out'            => $ses['cashOut'] ?? 0,
-                            'cash_expense'        => $ses['cashExpense'] ?? 0,
-                            'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? 0,
-                            'uang_fisik'          => (isset($ses['physicalCash']) && $ses['physicalCash'] !== null) ? $ses['physicalCash'] : 0,
-                            'selisih'             => (isset($ses['difference']) && $ses['difference'] !== null) ? $ses['difference'] : 0,
-                            'status'              => $statusStr,
-                            'catatan'             => $ses['closingNote'] ?? $ses['openingNote'] ?? null,
-                        ]);
-                        $syncedSessions++;
-                    } else {
-                        $sesRecord->update([
-                            'session_number'      => !empty($ses['sessionNumber']) ? $ses['sessionNumber'] : $sesRecord->session_number,
-                            'previous_session_id' => !empty($ses['previousSessionId']) ? $ses['previousSessionId'] : $sesRecord->previous_session_id,
-                            'waktu_tutup'         => $closeTime ?? $sesRecord->waktu_tutup,
-                            'total_pendapatan'    => ($ses['totalCashSales'] ?? 0) + ($ses['totalNonCashSales'] ?? 0),
-                            'total_cash_sales'    => $ses['totalCashSales'] ?? $sesRecord->total_cash_sales,
-                            'total_non_cash_sales'=> $ses['totalNonCashSales'] ?? $sesRecord->total_non_cash_sales,
-                            'cash_in'             => $ses['cashIn'] ?? $sesRecord->cash_in,
-                            'cash_out'            => $ses['cashOut'] ?? $sesRecord->cash_out,
-                            'cash_expense'        => $ses['cashExpense'] ?? $sesRecord->cash_expense,
-                            'expected_balance'    => $ses['expectedCash'] ?? $ses['expected_balance'] ?? $sesRecord->expected_balance,
-                            'uang_fisik'          => (isset($ses['physicalCash']) && $ses['physicalCash'] !== null) ? $ses['physicalCash'] : ($sesRecord->uang_fisik ?? 0),
-                            'selisih'             => (isset($ses['difference']) && $ses['difference'] !== null) ? $ses['difference'] : ($sesRecord->selisih ?? 0),
-                            'status'              => $statusStr,
-                            'catatan'             => $ses['closingNote'] ?? $ses['openingNote'] ?? $sesRecord->catatan,
-                        ]);
-                        $syncedSessions++;
-                    }
+                } catch (\Throwable $ae) {
+                    \Illuminate\Support\Facades\Log::error('Error sync absensi: ' . $ae->getMessage(), ['att' => $att]);
                 }
             }
         }

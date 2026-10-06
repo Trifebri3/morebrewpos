@@ -69,10 +69,17 @@ class SesiController extends Controller
         }
 
         // Hitung total pendapatan selama sesi ini (dari transaksi user ini yg sukses/lunas)
-        $totalPendapatan = \App\Models\Transaksi::where('user_id', auth()->id())
-            ->where('status', 'lunas')
-            ->where('created_at', '>=', $sesiAktif->waktu_buka)
-            ->sum('total_amount');
+        $totalPendapatan = \App\Models\Transaksi::where(function($q) use ($sesiAktif) {
+                $q->where('sesi_kasir_id', $sesiAktif->id)
+                  ->orWhere(function($sub) use ($sesiAktif) {
+                      $sub->where('user_id', auth()->id())
+                          ->where('created_at', '>=', $sesiAktif->waktu_buka);
+                  });
+            })
+            ->where(function($q) {
+                $q->whereNull('is_refunded')->orWhere('is_refunded', false);
+            })
+            ->sum('total');
             
         // Selisih = uang fisik - (modal awal + total pendapatan)
         $selisih = $request->uang_fisik - ($sesiAktif->modal_awal + $totalPendapatan);

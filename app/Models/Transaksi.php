@@ -10,7 +10,7 @@ class Transaksi extends Model
         'invoice_number', 'customer_name', 'order_type', 'items',
         'subtotal', 'discount_amount', 'voucher_id', 'tax', 'total',
         'payment_method', 'amount_paid', 'is_refunded', 'refund_reason', 'refunded_at',
-        'user_id', 'sesi_kasir_id'
+        'user_id', 'sesi_kasir_id', 'created_at'
     ];
 
     protected $casts = [
