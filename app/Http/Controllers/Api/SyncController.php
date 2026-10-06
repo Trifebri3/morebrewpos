@@ -20,6 +20,63 @@ use App\Models\SesiKasir;
 class SyncController extends Controller
 {
     /**
+     * Format transaksi standar untuk sync mobile POS & pesanan meja
+     */
+    private function formatTransactionForSync($t)
+    {
+        $rawItems = $t->items;
+        if (is_string($rawItems)) {
+            $rawItems = json_decode($rawItems, true) ?? [];
+        }
+        $normalizedItems = collect($rawItems ?? [])->map(function ($it) {
+            if (is_string($it)) {
+                $it = json_decode($it, true) ?? [];
+            }
+            return [
+                'productId' => (string) ($it['productId'] ?? $it['id'] ?? ''),
+                'name'      => (string) ($it['name'] ?? 'Menu'),
+                'price'     => (double) ($it['price'] ?? 0),
+                'quantity'  => (int) ($it['quantity'] ?? $it['qty'] ?? 1),
+                'notes'     => (string) ($it['notes'] ?? ''),
+            ];
+        })->values()->all();
+
+        // Ekstrak nama meja jika tercantum di customer_name (cth: "Budi (MEJA 1)")
+        $customerName = (string) ($t->customer_name ?? 'Pelanggan');
+        $extractedTable = '-';
+        if (preg_match('/\((?:Meja\s*)?([^)]+)\)/i', $customerName, $matches)) {
+            $extractedTable = trim($matches[1]);
+        }
+
+        $isPending = in_array(strtolower($t->payment_method ?? ''), ['pending', 'bayar_nanti']);
+
+        return [
+            'id' => (string) $t->id,
+            'invoiceNumber' => (string) $t->invoice_number,
+            'customerName' => $customerName,
+            'customerPhone' => '',
+            'orderType' => (string) ($t->order_type ?? 'dine_in'),
+            'tableNumber' => $extractedTable,
+            'items' => $normalizedItems,
+            'subtotal' => (double) ($t->subtotal ?? 0),
+            'discount' => (double) ($t->discount_amount ?? 0),
+            'voucherCode' => $t->voucher ? $t->voucher->kode : null,
+            'tax' => (double) ($t->tax ?? 0),
+            'total' => (double) ($t->total ?? 0),
+            'paymentMethod' => (string) ($t->payment_method ?? ($isPending ? 'pending' : 'Tunai')),
+            'amountPaid' => (double) ($t->amount_paid ?? 0),
+            'change' => max(0.0, (double) ($t->amount_paid ?? 0) - (double) ($t->total ?? 0)),
+            'cashierId' => $t->user_id ? (string) $t->user_id : '',
+            'cashierName' => $t->user ? $t->user->name : '',
+            'cashierSessionId' => $t->sesi_kasir_id ? (string) $t->sesi_kasir_id : null,
+            'status' => $t->is_refunded ? 'refunded' : ($isPending ? 'pending' : 'selesai'),
+            'refundReason' => $t->refund_reason,
+            'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
+            'syncStatus' => 'synced',
+        ];
+    }
+
+    /**
      * PULL DATA: Mengirimkan seluruh data master & status kedai dari server web ke aplikasi mobile POS.
      * Mengembalikan profil kedai, pengguna/kasir, kategori, menu produk, meja, voucher, dsb.
      */
@@ -121,28 +178,7 @@ class SyncController extends Controller
 
         // Data Transaksi Terbaru untuk sinkronisasi riwayat
         $recentTransactions = Transaksi::with(['voucher', 'user'])->latest()->take(100)->get()->map(function ($t) {
-            return [
-                'id' => (string) $t->id,
-                'invoiceNumber' => $t->invoice_number,
-                'customerName' => $t->customer_name ?? 'Pelanggan Walk-In',
-                'orderType' => $t->order_type ?? 'dine_in',
-                'items' => $t->items ?? [],
-                'subtotal' => (double) $t->subtotal,
-                'discount' => (double) $t->discount_amount,
-                'voucherCode' => $t->voucher ? $t->voucher->kode : null,
-                'tax' => (double) $t->tax,
-                'total' => (double) $t->total,
-                'paymentMethod' => $t->payment_method ?? 'cash',
-                'amountPaid' => (double) $t->amount_paid,
-                'change' => max(0, (double) $t->amount_paid - (double) $t->total),
-                'cashierId' => (string) ($t->user_id ?? 1),
-                'cashierName' => $t->user ? $t->user->name : 'Kasir',
-                'cashierSessionId' => $t->sesi_kasir_id ? (string) $t->sesi_kasir_id : null,
-                'status' => $t->is_refunded ? 'refunded' : ($t->payment_method === 'pending' || $t->payment_method === 'bayar_nanti' ? 'pending' : 'selesai'),
-                'refundReason' => $t->refund_reason,
-                'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
-                'syncStatus' => 'synced',
-            ];
+            return $this->formatTransactionForSync($t);
         });
 
         // Data Sesi Kasir Terbaru (sinkronisasi dua arah untuk rekam jejak shift kasir)
@@ -204,29 +240,12 @@ class SyncController extends Controller
         });
 
         // Data Pesanan yang Menunggu Pembayaran (QR Meja 'pending' & Kasir 'bayar_nanti')
-        $pendingTableOrders = Transaksi::whereIn('payment_method', ['pending', 'bayar_nanti'])
+        $pendingTableOrders = Transaksi::with(['voucher', 'user'])
+            ->whereIn('payment_method', ['pending', 'bayar_nanti'])
             ->latest()
             ->get()
             ->map(function ($t) {
-                return [
-                    'id' => (string) $t->id,
-                    'invoiceNumber' => $t->invoice_number,
-                    'customerName' => $t->customer_name ?? 'Pelanggan',
-                    'orderType' => $t->order_type ?? 'dine_in',
-                    'items' => $t->items ?? [],
-                    'subtotal' => (double) $t->subtotal,
-                    'discount' => (double) $t->discount_amount,
-                    'tax' => (double) $t->tax,
-                    'total' => (double) $t->total,
-                    'paymentMethod' => $t->payment_method ?? 'pending',
-                    'amountPaid' => (double) ($t->amount_paid ?? 0),
-                    'change' => 0.0,
-                    'cashierId' => '',
-                    'cashierName' => '',
-                    'status' => 'pending',
-                    'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
-                    'syncStatus' => 'synced',
-                ];
+                return $this->formatTransactionForSync($t);
             });
 
         return response()->json([
@@ -721,29 +740,12 @@ class SyncController extends Controller
      */
     public function getPendingTableOrders()
     {
-        $orders = Transaksi::whereIn('payment_method', ['pending', 'bayar_nanti'])
+        $orders = Transaksi::with(['voucher', 'user'])
+            ->whereIn('payment_method', ['pending', 'bayar_nanti'])
             ->latest()
             ->get()
             ->map(function ($t) {
-                return [
-                    'id' => (string) $t->id,
-                    'invoiceNumber' => $t->invoice_number,
-                    'customerName' => $t->customer_name ?? 'Pelanggan',
-                    'orderType' => $t->order_type ?? 'dine_in',
-                    'items' => $t->items ?? [],
-                    'subtotal' => (double) $t->subtotal,
-                    'discount' => (double) $t->discount_amount,
-                    'tax' => (double) $t->tax,
-                    'total' => (double) $t->total,
-                    'paymentMethod' => $t->payment_method ?? 'pending',
-                    'amountPaid' => (double) ($t->amount_paid ?? 0),
-                    'change' => 0.0,
-                    'cashierId' => '',
-                    'cashierName' => '',
-                    'status' => 'pending',
-                    'createdAt' => $t->created_at ? $t->created_at->toIso8601String() : now()->toIso8601String(),
-                    'syncStatus' => 'synced',
-                ];
+                return $this->formatTransactionForSync($t);
             });
 
         return response()->json([
@@ -771,13 +773,20 @@ class SyncController extends Controller
 
         $paymentMethod = $request->input('payment_method', 'Tunai');
         $amountPaid = (double) $request->input('amount_paid', $transaksi->total);
-        $cashierId = $request->input('cashier_id');
-        $sesiKasirId = $request->input('sesi_kasir_id') ?? $request->input('cashier_session_id');
+        $rawCashierId = $request->input('cashier_id');
+        $rawSesiId = $request->input('sesi_kasir_id') ?? $request->input('cashier_session_id');
+
+        $userId = is_numeric($rawCashierId) ? (int)$rawCashierId : null;
+        $sesiKasirId = is_numeric($rawSesiId) ? (int)$rawSesiId : null;
+        if (!$sesiKasirId && !empty($rawSesiId)) {
+            $s = SesiKasir::where('session_number', $rawSesiId)->first();
+            $sesiKasirId = $s?->id;
+        }
 
         $transaksi->update([
             'payment_method' => $paymentMethod,
             'amount_paid'    => $amountPaid,
-            'user_id'        => $cashierId,
+            'user_id'        => $userId,
             'sesi_kasir_id'  => $sesiKasirId,
         ]);
 
