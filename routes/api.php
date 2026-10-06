@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\SyncController;
 
 Route::get('/sync', [SyncController::class, 'pull'])->name('api.sync.pull');
 Route::post('/sync', [SyncController::class, 'push'])->name('api.sync.push');
+Route::post('/sync-v2', [SyncController::class, 'pushV2'])->name('api.sync.push.v2'); // Endpoint baru yang lebih aman
 Route::post('/login', [SyncController::class, 'login'])->name('api.login');
 Route::get('/orders/pending', [SyncController::class, 'getPendingTableOrders'])->name('api.orders.pending');
 Route::post('/orders/{invoice}/pay', [SyncController::class, 'payTableOrder'])->name('api.orders.pay');

@@ -738,4 +738,22 @@ class SyncController extends Controller
             'server_time' => now()->toIso8601String(),
         ]);
     }
+
+    /**
+     * PUSH DATA V2: Endpoint baru untuk sinkronisasi dengan try-catch agar error lebih mudah dilacak.
+     */
+    public function pushV2(Request $request)
+    {
+        try {
+            return $this->push($request);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Sync V2 Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan sinkronisasi: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
+    }
 }
