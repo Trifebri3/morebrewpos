@@ -9,6 +9,14 @@ use App\Http\Controllers\Api\SyncController;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'MoreBrew API is running.',
+        'version' => '1.0'
+    ]);
+});
+
 Route::get('/sync', [SyncController::class, 'pull'])->name('api.sync.pull');
 Route::post('/sync', [SyncController::class, 'push'])->name('api.sync.push');
 Route::post('/sync-v2', [SyncController::class, 'pushV2'])->name('api.sync.push.v2'); // Endpoint baru yang lebih aman
